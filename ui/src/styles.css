@@ -1,0 +1,90 @@
+:root {
+  --bg: #f3f3f1;
+  --surface: #ffffff;
+  --border: #d9d9d4;
+  --text: #1d1d1b;
+  --muted: #6b6b66;
+  --accent: #2557d6;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.tool {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tool:hover:not(:disabled) {
+  border-color: var(--border);
+}
+
+.tool[aria-pressed='true'] {
+  background: #e6ecfb;
+  color: var(--accent);
+}
+
+.tool:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.tool:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.separator {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--border);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.version {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}

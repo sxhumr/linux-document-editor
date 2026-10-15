@@ -1,6 +1,6 @@
 # Engine Evaluation (Milestone 1)
 
-**Date:** 2026-10-15 · **Status:** round trip validated in Node; webview integration not yet validated
+**Date:** 2026-10-15 · **Status:** round trip validated in Node; editor validated in WebKitGTK (Milestone 2). **Decision: go.**
 
 ## Summary
 
@@ -17,7 +17,7 @@ PageLite needs an existing engine that can open a `.docx`, apply an edit, and sa
 
 **Recommendation:** build PageLite on `@docx-editor.dev/core`, kept behind a small `document/` interface so the engine can be swapped. Keep SuperDoc 1.x as the fallback.
 
-**Do not start the full UI yet.** First, render the engine's editor inside a Tauri WebKitGTK window and check typing, IME input, selection and save. This evaluation only exercised the engines in Node, never in a webview. That check is the first task of Milestone 2.
+**Do not start the full UI yet.** First, render the engine's editor inside a WebKitGTK window and check typing, IME input, selection and save. This evaluation only exercised the engines in Node, never in a webview. That check is the first task of Milestone 2.
 
 ## Requirements used to judge
 
@@ -26,7 +26,7 @@ These come from `plan.md`:
 1. **Real round trip.** Open an existing DOCX, edit it, and save it again. Content the engine does not understand must survive.
 2. **Fully offline.** No network calls and no telemetry.
 3. **Distributable.** Licensing must allow an open-source Linux package (AppImage or `.deb`).
-4. **Lightweight.** Small enough to embed in a Tauri webview, with no server or Docker container.
+4. **Lightweight.** Small enough to embed in a desktop webview, with no server or Docker container.
 5. **Custom UI.** PageLite supplies its own menus and toolbar.
 6. **Testable.** Load, edit and save can be driven from automated tests.
 
@@ -127,7 +127,7 @@ Full output is in [`poc/engine-eval/results/SUMMARY.md`](../poc/engine-eval/resu
 
 ## What this evaluation does not prove
 
-- **No webview test.** Every engine was driven headlessly in Node, not in WebKitGTK. Typing, IME, selection, pagination, rendering accuracy and startup time inside Tauri are all untested.
+- **No webview test.** Every engine was driven headlessly in Node, not in WebKitGTK. Typing, IME, selection, pagination, rendering accuracy and startup time inside the desktop shell are all untested.
 - **Structural, not visual.** The comparison checks XML structure only. No page images were compared.
 - **One small edit.** Each test appended a short run of text to one paragraph. Formatting edits, list edits, table edits and paste were not exercised. The core does expose operations for these (`setRunProperties`, `setListLevel`, `insertTableRow`, …), but none were tested.
 - **Synthetic corpus only.** The corpus was written by two programs (the `docx` library and LibreOffice). Files saved by Microsoft Word, Google Docs or Pages were not tested. Add synthetic Word-authored files in Milestone 6.
@@ -135,19 +135,11 @@ Full output is in [`poc/engine-eval/results/SUMMARY.md`](../poc/engine-eval/resu
 
 ## Proposed architecture
 
-```
-Tauri 2 (Rust)                       Webview (React + TypeScript)
-├─ file dialogs, read/write          ├─ PageLite UI: menus, toolbar, find, title, dirty marker
-│  (atomic write: temp file, then    ├─ src/document/  ← the ONLY code that imports the engine
-│  rename)                           │    open(bytes) / save() / commands / onChange
-└─ no network permissions            └─ @docx-editor.dev/core (+ React adapter if it supports
-                                          a custom toolbar; otherwise PageLite's own adapter
-                                          built on the core's public editor contract)
-```
+> **Superseded (2026-10-15):** the shell is now C++ with webview/webview instead of Tauri. See [ADR-1 in ARCHITECTURE.md](ARCHITECTURE.md#adr-1-c-with-webviewwebview-instead-of-tauri-2026-10-15). The engine choice and the engine-boundary rule below still apply.
 
-- **Rust side.** All file I/O happens in Rust. The webview only ever sees bytes. Saving writes to a temporary file in the same directory, then renames it over the original. The document is marked clean only after the rename succeeds.
-- **Engine boundary.** `src/document/` is the only place that knows the engine exists. Swapping in SuperDoc 1.x would be a change to that module alone.
-- **Tests.** The harness's inspector (`lib/inspect.mjs`) and the corpus become the start of `tests/compatibility/`.
+- File I/O happens natively (C++), and the webview only ever sees bytes. Saving writes a temporary file in the same directory and renames it over the original. The document is marked clean only after the rename succeeds.
+- `ui/src/document/` will be the only code that imports the engine, so swapping in SuperDoc 1.x would be a change to that module alone.
+- The harness's inspector (`lib/inspect.mjs`) and the corpus become the start of the compatibility tests.
 
 ## Decisions needed from you
 
@@ -156,17 +148,23 @@ Tauri 2 (Rust)                       Webview (React + TypeScript)
    - **If you ever fall back to SuperDoc 1.x**, PageLite has to be AGPL-3.0.
 2. **Engine risk.** Do you accept relying on a young, fast-moving engine (`@docx-editor.dev`), with pinned versions and an engine boundary as the safeguards?
 
-## Next step: start of Milestone 2
+## Go/no-go result (Milestone 2)
 
-1. Scaffold Tauri 2 + React + TypeScript.
-   - **Rust is not installed yet.**
-   - **Linux packages:** Tauri also needs `libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev`, `librsvg2-dev` and `libayatana-appindicator3-dev`; see https://v2.tauri.app/start/prerequisites/.
-2. Render the docx-editor editor in the WebKitGTK webview, and check:
-   - typing, undo and IME input;
-   - selection and scrolling;
-   - opening `long-document.docx`;
-   - that the Apache-2.0 packages accept a custom toolbar.
-3. Go or no-go on the engine before building the UI.
+On 2026-10-15, the editor was run inside the PageLite C++ shell: WebKitGTK 2.52.6, Ubuntu 24.04.2. It used a blank document and PageLite's own toolbar, built only with the Apache-2.0 composition API (`DocxEditor.Root`, `useEditorCommand`).
+
+**Checked by hand, all working:**
+- typing and caret movement;
+- mouse and keyboard selection;
+- bold, italic and underline, from the shortcuts and from the buttons (including their active state);
+- bulleted and numbered lists;
+- undo and redo;
+- closing the window.
+
+**Not covered yet:**
+- **Language scope.** IME and non-English input are out of scope for now, because the first release targets English.
+- **Opening real files.** Opening `.docx` files inside the app, including the 2,000-paragraph fixture, comes with Milestone 3.
+
+**Decision:** keep `@docx-editor.dev/core`.
 
 ## Sources
 
@@ -177,5 +175,4 @@ Tauri 2 (Rust)                       Webview (React + TypeScript)
 - docx: https://github.com/dolanmiu/docx
 - Tiptap DOCX import/export: https://tiptap.dev/docs/conversion/import/docx/editor-extension and https://tiptap.dev/docs/conversion/export/docx/editor-extension
 - ONLYOFFICE: https://github.com/ONLYOFFICE/DocumentServer and https://helpcenter.onlyoffice.com/docs/installation/docs-community-install-docker.aspx
-- Tauri prerequisites and Linux graphics notes: https://v2.tauri.app/start/prerequisites/ and https://v2.tauri.app/develop/debug/linux-graphics/
 - Package versions, licences and dependency lists: `npm view` on 2026-10-15

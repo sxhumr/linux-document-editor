@@ -1,0 +1,13 @@
+Checks: >
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -bugprone-easily-swappable-parameters,
+  -cert-err58-cpp
+HeaderFilterRegex: 'native/src/.*'
