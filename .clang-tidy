@@ -1,3 +1,9 @@
+# Disabled checks:
+#   modernize-use-trailing-return-type     style preference
+#   readability-identifier-length/-magic-numbers  noisy for short, local code
+#   bugprone-easily-swappable-parameters   flags most two-string APIs
+#   cert-err58-cpp                         static std::string constants are fine here
+#   readability-make-member-function-const flags methods that mutate through a pointer member
 Checks: >
   bugprone-*,
   cert-*,
@@ -9,5 +15,9 @@ Checks: >
   -readability-identifier-length,
   -readability-magic-numbers,
   -bugprone-easily-swappable-parameters,
-  -cert-err58-cpp
+  -cert-err58-cpp,
+  -readability-make-member-function-const
 HeaderFilterRegex: 'native/src/.*'
+# clang 18 reports __cpp_concepts=201907, so libstdc++ 13 hides <expected> from it.
+# GCC (the compiler that builds PageLite) reports 202002; tell clang-tidy the same.
+ExtraArgsBefore: ['-D__cpp_concepts=202002L', '-Wno-builtin-macro-redefined']

@@ -1,15 +1,23 @@
 #include "shell.hpp"
 
 #include "assets.hpp"
+#include "bridge_json.hpp"
+#include "file_dialogs.hpp"
+#include "file_io.hpp"
 #include "navigation.hpp"
+#include "path_grants.hpp"
 
 #include <gtk/gtk.h>
 #include <libsoup/soup.h>
 #include <webkit2/webkit2.h>
 #include <webview/webview.h>
 
+#include <filesystem>
+#include <memory>
+#include <span>
 #include <string>
 #include <utility>
+#include <vector>
 
 #ifndef PAGELITE_VERSION
 #error "PAGELITE_VERSION must be defined by the build"
@@ -30,9 +38,29 @@ constexpr const char *kContentSecurityPolicy =
     "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; "
     "frame-ancestors 'none'";
 
-/// The first positional argument of a webview binding call, which arrives as a JSON array.
-std::string first_arg(const std::string &request) {
-  return webview::detail::json_parse(request, "", 0);
+/// A positional argument of a webview binding call, which arrives as a JSON array.
+std::string arg(const std::string &request, int index = 0) {
+  return webview::detail::json_parse(request, "", index);
+}
+
+std::string to_base64(std::span<const std::byte> bytes) {
+  gchar *encoded = g_base64_encode(reinterpret_cast<const guchar *>(bytes.data()), bytes.size());
+  std::string out(encoded);
+  g_free(encoded);
+  return out;
+}
+
+std::vector<std::byte> from_base64(const std::string &text) {
+  gsize size = 0;
+  guchar *decoded = g_base64_decode(text.c_str(), &size);
+  std::vector<std::byte> out(reinterpret_cast<std::byte *>(decoded),
+                             reinterpret_cast<std::byte *>(decoded) + size);
+  g_free(decoded);
+  return out;
+}
+
+std::string error_json(const file_io::Error &e) {
+  return bridge::error(file_io::code_name(e.code), e.message);
 }
 
 } // namespace
@@ -43,6 +71,7 @@ struct Shell::Impl {
   std::unique_ptr<webview::webview> view;
   bool ui_handles_close = false;
   bool close_confirmed = false;
+  PathGrants grants;
 
   explicit Impl(ShellOptions opts) : options(std::move(opts)) {}
 
@@ -141,7 +170,7 @@ struct Shell::Impl {
              std::to_string(webkit_get_micro_version()) + "\"}";
     });
     view->bind("pagelite_setTitle", [this](const std::string &request) {
-      gtk_window_set_title(GTK_WINDOW(window), first_arg(request).c_str());
+      gtk_window_set_title(GTK_WINDOW(window), arg(request).c_str());
       return std::string("null");
     });
     view->bind("pagelite_registerCloseHandler", [this](const std::string &) {
@@ -153,6 +182,103 @@ struct Shell::Impl {
       view->terminate();
       return std::string("null");
     });
+    bind_documents();
+  }
+
+  // ---- documents --------------------------------------------------------------------
+  //
+  // Paths are only ever chosen by the user (dialog or command line) and recorded in
+  // `grants`; read and write requests for any other path are refused. Replies with
+  // status 0 resolve the UI's promise, status 1 rejects it with {code, message}.
+
+  void resolve(const std::string &id, const std::string &json) { view->resolve(id, 0, json); }
+  void reject(const std::string &id, const std::string &json) { view->resolve(id, 1, json); }
+
+  /// Reads a granted file and replies with {path, name, data}.
+  void reply_with_document(const std::string &id, const std::filesystem::path &path) {
+    const auto bytes = file_io::read_file(path);
+    if (!bytes) {
+      reject(id, error_json(bytes.error()));
+      return;
+    }
+    resolve(id, bridge::document(path.string(), path.filename().string(), to_base64(*bytes)));
+  }
+
+  void bind_async(const std::string &name,
+                  void (Impl::*handler)(const std::string &id, const std::string &request)) {
+    view->bind(
+        name,
+        [this, handler](const std::string &id, const std::string &request, void *) {
+          (this->*handler)(id, request);
+        },
+        nullptr);
+  }
+
+  void open_document(const std::string &id, const std::string & /*request*/) {
+    dialogs::choose_document_to_open(GTK_WINDOW(window), [this, id](auto path) {
+      if (!path) {
+        resolve(id, "null"); // cancelled
+        return;
+      }
+      grants.grant(*path);
+      reply_with_document(id, *path);
+    });
+  }
+
+  void take_initial_document(const std::string &id, const std::string & /*request*/) {
+    if (!options.initial_path) {
+      resolve(id, "null");
+      return;
+    }
+    const std::filesystem::path path = *std::exchange(options.initial_path, std::nullopt);
+    grants.grant(path);
+    reply_with_document(id, path);
+  }
+
+  void choose_save_path(const std::string &id, const std::string &request) {
+    const std::filesystem::path current = arg(request, 1);
+    std::optional<std::filesystem::path> folder;
+    if (grants.is_granted(current)) {
+      folder = current.parent_path(); // only reveal folders the user already chose
+    }
+    dialogs::choose_save_path(GTK_WINDOW(window), arg(request, 0), folder, [this, id](auto path) {
+      if (!path) {
+        resolve(id, "null");
+        return;
+      }
+      const auto target = file_io::with_docx_extension(*path);
+      // GTK confirmed overwriting the name as typed, not the one with ".docx" added.
+      std::error_code ec;
+      if (target != *path && std::filesystem::exists(target, ec)) {
+        reject(id, bridge::error("exists", target.filename().string() +
+                                               " already exists. Choose another name, or "
+                                               "type the full name to replace it."));
+        return;
+      }
+      grants.grant(target);
+      resolve(id, bridge::file_ref(target.string(), target.filename().string()));
+    });
+  }
+
+  void write_document(const std::string &id, const std::string &request) {
+    const std::filesystem::path path = arg(request, 0);
+    if (!grants.is_granted(path)) {
+      reject(id, bridge::error("not-granted", "PageLite can only save to a file you chose."));
+      return;
+    }
+    const auto bytes = from_base64(arg(request, 1));
+    if (const auto written = file_io::write_file_atomic(path, bytes); !written) {
+      reject(id, error_json(written.error()));
+      return;
+    }
+    resolve(id, "null");
+  }
+
+  void bind_documents() {
+    bind_async("pagelite_openDocument", &Impl::open_document);
+    bind_async("pagelite_takeInitialDocument", &Impl::take_initial_document);
+    bind_async("pagelite_chooseSavePath", &Impl::choose_save_path);
+    bind_async("pagelite_writeDocument", &Impl::write_document);
   }
 
   void create() {

@@ -4,6 +4,7 @@
 // It serves the embedded UI over the private pagelite:// scheme, refuses every other
 // navigation, and routes window-close through the UI so unsaved edits are never dropped.
 
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -14,6 +15,8 @@ struct ShellOptions {
   bool debug = false;
   /// Debug builds only: load the UI from a Vite dev server instead of the embedded copy.
   std::optional<std::string> dev_server_url;
+  /// A document given on the command line, opened once the UI asks for it.
+  std::optional<std::filesystem::path> initial_path;
 };
 
 class Shell {

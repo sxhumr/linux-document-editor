@@ -7,7 +7,10 @@ set(PAGELITE_WARNINGS -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conv
 # ---- pagelite_core: platform-free logic, unit-tested without GTK ----------------------
 add_library(pagelite_core STATIC
   src/assets.cpp
-  src/navigation.cpp)
+  src/bridge_json.cpp
+  src/file_io.cpp
+  src/navigation.cpp
+  src/path_grants.cpp)
 target_include_directories(pagelite_core PUBLIC src)
 target_compile_options(pagelite_core PRIVATE ${PAGELITE_WARNINGS})
 
@@ -52,6 +55,7 @@ set_source_files_properties("${EMBED_DIR}/assets_blob.S" PROPERTIES OBJECT_DEPEN
 
 # ---- the application ------------------------------------------------------------------
 add_executable(pagelite
+  src/file_dialogs.cpp
   src/main.cpp
   src/shell.cpp
   "${EMBED_DIR}/assets_index.cpp"
@@ -74,7 +78,10 @@ if(PAGELITE_BUILD_TESTS)
 
   add_executable(pagelite_tests
     tests/assets_test.cpp
-    tests/navigation_test.cpp)
+    tests/bridge_json_test.cpp
+    tests/file_io_test.cpp
+    tests/navigation_test.cpp
+    tests/path_grants_test.cpp)
   target_compile_options(pagelite_tests PRIVATE ${PAGELITE_WARNINGS})
   target_link_libraries(pagelite_tests PRIVATE pagelite_core Catch2::Catch2WithMain)
   catch_discover_tests(pagelite_tests)

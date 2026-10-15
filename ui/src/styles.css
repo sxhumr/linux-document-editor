@@ -21,6 +21,8 @@ body,
 #root {
   height: 100%;
   margin: 0;
+  /* The document viewport is the only thing that scrolls; the toolbar stays put. */
+  overflow: hidden;
 }
 
 .shell {
@@ -85,6 +87,33 @@ body,
 
 .canvas {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+/* The engine's scroll container: it must have a bounded height to scroll at all. */
+.viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.status-info {
+  background: #eef6ee;
+  color: #1f5f2a;
+}
+
+.status-error {
+  background: #fdeeee;
+  color: #8a1c1c;
 }

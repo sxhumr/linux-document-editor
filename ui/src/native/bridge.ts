@@ -2,14 +2,42 @@
 // Outside the shell (e.g. `npm run dev` in a normal browser, or tests) the bindings do not
 // exist, so every call degrades to a harmless fallback instead of throwing.
 
+import { base64ToBytes, bytesToBase64 } from './base64';
+
 export interface AppInfo {
   name: string;
   version: string;
   webkitVersion: string;
 }
 
+/** A file the user picked; the shell only reads and writes paths it has handed out. */
+export interface FileRef {
+  path: string;
+  name: string;
+}
+
+export interface OpenedDocument extends FileRef {
+  bytes: Uint8Array;
+}
+
+/** A failure reported by the shell, e.g. code "permission-denied" or "no-space". */
+export class NativeError extends Error {
+  readonly code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'NativeError';
+    this.code = code;
+  }
+}
+
+type WireDocument = FileRef & { data: string };
+
 interface NativeBindings {
   pagelite_appInfo?: () => Promise<AppInfo>;
+  pagelite_openDocument?: () => Promise<WireDocument | null>;
+  pagelite_takeInitialDocument?: () => Promise<WireDocument | null>;
+  pagelite_chooseSavePath?: (suggestedName: string, currentPath: string) => Promise<FileRef | null>;
+  pagelite_writeDocument?: (path: string, base64: string) => Promise<null>;
   pagelite_setTitle?: (title: string) => Promise<null>;
   pagelite_registerCloseHandler?: () => Promise<null>;
   pagelite_confirmClose?: () => Promise<null>;
@@ -46,4 +74,49 @@ export function onCloseRequested(onRequest: (confirm: () => Promise<void>) => vo
   return () => {
     delete native().__pagelite_requestClose;
   };
+}
+
+/** Rejections from the shell arrive as {code, message}; anything else is unexpected. */
+function toNativeError(reason: unknown): NativeError {
+  if (reason && typeof reason === 'object' && 'code' in reason && 'message' in reason) {
+    return new NativeError(String(reason.code), String(reason.message));
+  }
+  return new NativeError('unknown', reason instanceof Error ? reason.message : String(reason));
+}
+
+async function call<T>(fn: (() => Promise<T>) | undefined): Promise<T> {
+  if (!fn) throw new NativeError('unavailable', 'File access needs the PageLite desktop app.');
+  try {
+    return await fn();
+  } catch (reason) {
+    throw toNativeError(reason);
+  }
+}
+
+const fromWire = (doc: WireDocument | null): OpenedDocument | null =>
+  doc && { path: doc.path, name: doc.name, bytes: base64ToBytes(doc.data) };
+
+/** Shows the Open dialog. Resolves null if the user cancels. */
+export async function openDocument(): Promise<OpenedDocument | null> {
+  const n = native();
+  return fromWire(await call(n.pagelite_openDocument && (() => n.pagelite_openDocument!())));
+}
+
+/** The document passed on the command line, once; null if there was none. */
+export async function takeInitialDocument(): Promise<OpenedDocument | null> {
+  const n = native();
+  if (!n.pagelite_takeInitialDocument) return null;
+  return fromWire(await call(() => n.pagelite_takeInitialDocument!()));
+}
+
+/** Shows the Save As dialog. Resolves null if the user cancels. */
+export async function chooseSavePath(suggestedName: string, currentPath: string | null): Promise<FileRef | null> {
+  const n = native();
+  return call(n.pagelite_chooseSavePath && (() => n.pagelite_chooseSavePath!(suggestedName, currentPath ?? '')));
+}
+
+/** Writes the document atomically. Rejects with a NativeError; the file is then unchanged. */
+export async function writeDocument(path: string, bytes: Uint8Array): Promise<void> {
+  const n = native();
+  await call(n.pagelite_writeDocument && (() => n.pagelite_writeDocument!(path, bytesToBase64(bytes))));
 }

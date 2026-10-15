@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <iostream>
 
 int main(int argc, char **argv) {
@@ -13,6 +14,11 @@ int main(int argc, char **argv) {
   }
 
   pagelite::ShellOptions options;
+  if (argc > 1) {
+    std::error_code ec;
+    const auto path = std::filesystem::absolute(argv[1], ec);
+    options.initial_path = ec ? std::filesystem::path(argv[1]) : path;
+  }
 #ifdef PAGELITE_DEBUG
   options.debug = true;
   if (const char *url = std::getenv("PAGELITE_DEV_SERVER"); url != nullptr && *url != '\0') {
