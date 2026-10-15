@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+src-tauri/target/
+*.AppImage
+*.deb
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# Test output
+coverage/
+tests/**/output/
+
+# Private documents — never commit
+fixtures/private/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
