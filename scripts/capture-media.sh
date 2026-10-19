@@ -7,15 +7,17 @@
 # docs/media/demo.docx, drives the app with xdotool and writes docs/media/*.png and demo.gif.
 # Reproducible: the same package and document always give the same pictures.
 set -euo pipefail
+# A package path given as an argument is relative to where the script was run from.
+deb_arg="${1:+$(realpath -- "$1")}"
 cd "$(dirname "$0")/.."
 
-deb="${1:-$(ls build/package/dist/pagelite_*_amd64.deb 2>/dev/null | head -1)}"
+deb="${deb_arg:-$(ls "$PWD"/build/package/dist/pagelite_*_amd64.deb 2>/dev/null | head -1)}"
 [[ -f "$deb" ]] || { echo "No package. Build it: cmake --preset package && cmake --build --preset package && cpack --preset deb" >&2; exit 1; }
 [[ -f docs/media/demo.docx ]] || { echo "No demo document. Run: (cd ui && npm run demo-document)" >&2; exit 1; }
 
 docker run --rm -i \
   -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
-  -v "$PWD/$deb:/tmp/pagelite.deb:ro" \
+  -v "$deb:/tmp/pagelite.deb:ro" \
   -v "$PWD/docs/media:/media" \
   ubuntu:24.04 bash -euo pipefail -s <<'EOF'
 export DEBIAN_FRONTEND=noninteractive

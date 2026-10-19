@@ -2,9 +2,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -186,6 +188,31 @@ TEST_CASE("write_file_atomic fails safely") {
     CHECK(text_of(target) == "original");
     CHECK(entry_count(dir.path) == 1);
   }
+}
+
+TEST_CASE("write_file_atomic leaves the original intact when writing stops partway") {
+  // A full disk makes write() fail after part of the file is written. A file-size limit
+  // produces the same partial write without needing a full filesystem: the kernel accepts
+  // the first 4 KB of the temporary file, then refuses the rest.
+  TempDir dir;
+  const auto target = dir.path / "doc.docx";
+  write_text(target, "original");
+  const std::vector<std::byte> big(64 * 1024, std::byte{'x'});
+
+  rlimit saved{};
+  REQUIRE(::getrlimit(RLIMIT_FSIZE, &saved) == 0);
+  const auto old_handler = std::signal(SIGXFSZ, SIG_IGN); // fail with EFBIG, don't kill us
+  rlimit limited = saved;
+  limited.rlim_cur = 4096;
+  REQUIRE(::setrlimit(RLIMIT_FSIZE, &limited) == 0);
+  const auto result = write_file_atomic(target, big);
+  ::setrlimit(RLIMIT_FSIZE, &saved);
+  std::signal(SIGXFSZ, old_handler);
+
+  REQUIRE_FALSE(result);
+  CHECK(result.error().code == ErrorCode::TooLarge); // EFBIG; a full disk reports NoSpace
+  CHECK(text_of(target) == "original");
+  CHECK(entry_count(dir.path) == 1); // the partial temporary file was removed
 }
 
 TEST_CASE("write then read round-trips binary data") {

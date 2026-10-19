@@ -13,7 +13,7 @@ First release.
 
 ### Your work is safe
 
-- Atomic saves: a crash or full disk never leaves a half-written file.
+- Atomic saves: if a save stops partway, for example because the disk is full or the app crashes, the original file stays complete. A test simulates a write that fails partway.
 - A failed save keeps every edit, and the document stays marked as modified.
 - Save / Discard / Cancel before New, Open, Quit or closing the window.
 - Files are checked before they replace the open document. Damaged files and decompression bombs are refused with a readable message.
@@ -30,6 +30,7 @@ First release.
 ### Fixed before release
 
 - Typing into Find at normal speed could move keyboard focus into the document, so the next keys replaced the selected match. Focus now stays in the Find box (`keepingFocus`).
+- Opening a file of exactly the 256 MB limit could report "grew while reading" when a read was interrupted or failed. Interrupted reads are now retried, and real errors are reported as read errors.
 
 ### Known limitations
 
