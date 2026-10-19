@@ -57,6 +57,16 @@ Error os_error(std::string_view action, const std::filesystem::path &path, int e
           std::string(action) + " " + path.string() + ": " + std::strerror(err)};
 }
 
+/// read(2), retrying when a signal interrupts it. Returns -1 (with errno) only for real errors.
+ssize_t read_some(int fd, std::byte *buffer, std::size_t size) {
+  while (true) {
+    const ssize_t n = ::read(fd, buffer, size);
+    if (n >= 0 || errno != EINTR) {
+      return n;
+    }
+  }
+}
+
 /// write(2) until done, retrying on EINTR and short writes.
 bool write_all(int fd, std::span<const std::byte> bytes) {
   while (!bytes.empty()) {
@@ -125,7 +135,10 @@ std::expected<std::vector<std::byte>, Error> read_file(const std::filesystem::pa
       // The file may have grown since fstat; read until EOF, still within the limit.
       if (bytes.size() >= max_bytes) {
         std::byte probe{};
-        const ssize_t extra = ::read(fd.get(), &probe, 1);
+        const ssize_t extra = read_some(fd.get(), &probe, 1);
+        if (extra < 0) {
+          return std::unexpected(os_error("Cannot read", path, errno));
+        }
         if (extra == 0) {
           break;
         }
@@ -133,11 +146,8 @@ std::expected<std::vector<std::byte>, Error> read_file(const std::filesystem::pa
       }
       bytes.resize(std::min(max_bytes, bytes.size() + std::size_t{64} * 1024));
     }
-    const ssize_t n = ::read(fd.get(), bytes.data() + filled, bytes.size() - filled);
+    const ssize_t n = read_some(fd.get(), bytes.data() + filled, bytes.size() - filled);
     if (n < 0) {
-      if (errno == EINTR) {
-        continue;
-      }
       return std::unexpected(os_error("Cannot read", path, errno));
     }
     if (n == 0) {

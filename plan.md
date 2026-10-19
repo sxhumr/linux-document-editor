@@ -314,8 +314,8 @@ Status at release 0.1.0 (2026-10-19), with the evidence for each item:
 - [x] User can edit and format text. Toolbar, menus and shortcuts (Milestone 5); see `docs/media/`.
 - [x] Save and Save As work. Atomic native writes (ADR-6), `file_io_test.cpp` and `controller.test.ts`.
 - [x] Unsaved changes are protected. Save / Discard / Cancel before New, Open, Quit and close (ADR-4, ADR-7).
-- [x] Save failures do not silently discard edits. `controller.test.ts`, and manual checklist item 5 in `docs/TESTING.md`.
-- [x] Saved files can be reopened. Every compatibility trip reopens its output in the engine and in LibreOffice.
+- [x] Save failures do not silently discard edits. `controller.test.ts` (the editor side), `file_io_test.cpp` (refused writes, and a write that fails partway), and manual checklist item 5 in `docs/TESTING.md`.
+- [x] Saved files can be reopened. Automated: every compatibility trip reopens its output in the engine and in LibreOffice. The full in-app path (editor → bridge → atomic write → reopen) is checked by hand (manual checklist item 1); there is no automated end-to-end test of it yet.
 - [x] DOCX compatibility tests have been performed. `ui/tests/compatibility/` (35 documents, in CI); results in `docs/COMPATIBILITY.md`.
 - [x] Known limitations are documented. `docs/ARCHITECTURE.md` and `docs/COMPATIBILITY.md`.
 - [x] Automated tests pass. CI runs the UI, native and package jobs.

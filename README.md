@@ -8,11 +8,11 @@ A fast, uncluttered Linux desktop editor for Microsoft Word `.docx` files. It's 
 
 ## Features
 
-- **Edits real Word documents.** It opens, edits and saves `.docx` files, and keeps what it doesn't edit (comments, tracked changes, footnotes, fields, images, sections) as it was. [Evidence](docs/COMPATIBILITY.md).
+- **Edits real Word documents.** It opens, edits and saves `.docx` files. Content it doesn't edit (comments, tracked changes, footnotes, fields, images, sections) comes out with the same content. The XML is re-serialized, so the bytes differ. [Evidence](docs/COMPATIBILITY.md).
 - **Essential formatting.** Paragraph styles and headings, font and size, bold, italic, underline, alignment, bulleted and numbered lists, indent, and clear formatting.
 - **Keyboard first.** Word and LibreOffice shortcuts, menus you can open and navigate from the keyboard, and incremental Find. Press F1 to see every shortcut.
 - **Safe with your work.**
-  - Saves are atomic: a crash mid-save never leaves a half-written file.
+  - Saves are atomic: if a save stops partway, for example because the disk is full or the app crashes, the original file stays complete.
   - A failed save keeps every edit.
   - Nothing closes or replaces a modified document without asking.
 - **Private and offline.** The interface is built into the binary, there is no network access, and documents never leave your machine.
@@ -82,12 +82,14 @@ The reasons behind each decision are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTU
 - **Compatibility, tested on every change.**
   - 35 synthetic documents, some written by docx.js and some by LibreOffice, are opened, edited, saved and reopened through the engine.
   - A separate OOXML reader compares 31 features and every package part.
-  - All features are kept, unedited parts keep the same content, and malformed files and a decompression bomb are refused.
+  - Every checked feature survives an edit and save, unedited parts keep the same content, and malformed files and a decompression bomb are refused.
+  - One formatting difference is known: text typed at the end of a paragraph that ends in a link takes on the link's style.
   - [Results and known differences](docs/COMPATIBILITY.md).
-- **About 1,200 automated tests in CI:** Vitest for the UI and compatibility, Catch2 for the C++ shell, plus a job that installs the `.deb` on a clean Ubuntu 24.04 container, opens a document with it and removes it again.
+- **About 1,240 automated tests in CI:** Vitest for the UI and compatibility, Catch2 for the C++ shell, plus a job that installs the `.deb` on a clean Ubuntu 24.04 container, opens a document with it and removes it again.
 - **Measured startup (warm, i7-8565U laptop).**
   - Empty editor: 0.94 s.
   - A 10 KB document: 1.50 s.
+  - Cold starts (the plan's actual target) have not been measured yet.
   - Procedure and caveats are in [`docs/TESTING.md`](docs/TESTING.md#performance).
 - **Licences checked at build time.** Every embedded component's licence is collected into the package, and an unexpected licence fails the build.
 

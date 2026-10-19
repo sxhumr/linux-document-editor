@@ -141,6 +141,17 @@ describe('Save', () => {
 });
 
 describe('Open', () => {
+  it('cancelling the Open dialog changes nothing, even with unsaved edits', async () => {
+    const { controller, editor, files, askToSave, edit, state } = setup();
+    edit();
+    const before = state();
+    files.openDocument.mockResolvedValueOnce(null);
+    expect(await controller.open()).toBe(false);
+    expect(askToSave).not.toHaveBeenCalled();
+    expect(editor.load).not.toHaveBeenCalled();
+    expect(state()).toMatchObject({ info: before.info, modified: true, notice: null });
+  });
+
   it('replaces an unmodified document without asking', async () => {
     const { controller, files, editor, askToSave, state } = setup();
     files.openDocument.mockResolvedValue(doc('a.docx'));

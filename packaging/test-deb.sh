@@ -6,15 +6,17 @@
 #
 #   packaging/test-deb.sh [path/to/pagelite_*.deb]    needs Docker; downloads ~300 MB once
 set -euo pipefail
+# A package path given as an argument is relative to where the script was run from.
+deb_arg="${1:+$(realpath -- "$1")}"
 cd "$(dirname "$0")/.."
 
-deb="${1:-$(ls build/package/dist/pagelite_*_amd64.deb 2>/dev/null | head -1)}"
+deb="${deb_arg:-$(ls "$PWD"/build/package/dist/pagelite_*_amd64.deb 2>/dev/null | head -1)}"
 [[ -f "$deb" ]] || { echo "No package. Build it: cmake --preset package && cmake --build --preset package && cpack --preset deb" >&2; exit 1; }
 image=ubuntu:24.04
 
 echo "Testing $deb on a clean $image"
 docker run --rm -i \
-  -v "$PWD/$deb:/tmp/pagelite.deb:ro" \
+  -v "$deb:/tmp/pagelite.deb:ro" \
   -v "$PWD/fixtures/docx:/tmp/fixtures:ro" \
   "$image" bash -euo pipefail -s <<'EOF'
 export DEBIAN_FRONTEND=noninteractive

@@ -12,7 +12,7 @@
 | Static checks | oxlint, Prettier, TypeScript; clang-format, clang-tidy | see the README | Yes, except clang-tidy |
 | Manual checklist | Things only a person at the window can judge | [below](#manual-checklist) | No |
 
-At the Milestone 6 commit: 29 C++ tests and 1,205 UI tests (81 unit, 1,124 compatibility) pass. The 31 LibreOffice tests also pass when run with `npm run test:compat`.
+At release 0.1.0: 30 C++ tests and 1,210 UI tests (86 unit, 1,124 compatibility) pass. The 31 LibreOffice tests also pass when run with `npm run test:compat`.
 
 ## DOCX compatibility suite
 
@@ -50,6 +50,12 @@ Malformed documents must be refused both by `validateDocx` and by the engine, wi
 
 **Gap.** The suite tests the engine headlessly. The app saves through the browser editor's `save()`, which the engine documents as the same serializer, but the full in-app path (editor → bridge → atomic write) is covered only by the manual check below and the C++ file I/O tests.
 
+### Known test gaps
+
+- **Plan §8 integration tests.** Save failures, cancelled dialogs and closing with unsaved changes are covered by unit tests of `DocumentController` with fake file access (`controller.test.ts`) and by the C++ file I/O tests. Nothing automated drives the whole path from the UI through the bridge and shell to the disk.
+- **The shell's own code.** The dialog and permission code in `native/src/shell.cpp`, which records the paths the user chose, has no automated tests. It is covered by manual checklist items 1, 5 and 6.
+- **Read errors.** A failing `read()` can't be produced reliably in a test. The retry and error paths in `read_file` are checked by review only.
+
 ### Regenerating fixtures
 
 ```bash
@@ -73,7 +79,7 @@ Regenerating rewrites every fixture (docx.js stamps the creation time), so commi
 
 ### Results
 
-Measured 2026-10-19 with a release build of `526982a` plus the Milestone 6 changes:
+Measured 2026-10-19 with a release build of the Milestone 6 code (commit `09c81c1`). Later commits change the UI and docs, but not startup:
 
 - **Machine:** Intel Core i7-8565U @ 1.80 GHz, 15 GB RAM, Ubuntu 24.04.2 LTS, kernel 7.0.0-38, Wayland session.
 - **Libraries:** GTK 3.24.41, WebKitGTK 2.52.6.
@@ -87,8 +93,8 @@ Measured 2026-10-19 with a release build of `526982a` plus the Milestone 6 chang
 
 **Against the plan's targets (§10):**
 
-- **Startup under 2 s:** met warm, median 0.94 s.
-- **Small document open under 2 s:** met warm, median 1.50 s and p90 1.65 s from launch, which includes startup.
+- **Cold startup under 2 s:** not measured yet. The plan's target is for a cold start, and `scripts/measure.sh --cold` is ready but needs sudo. Warm, the median is 0.94 s.
+- **Small document open under 2 s:** not measured cold. Warm, the median is 1.50 s and the p90 1.65 s from launch, which includes startup.
 
 **Variance.** Results vary between sessions on this laptop. Two earlier sessions the same day gave medians of 1,169 and 1,485 ms for the empty editor, 1,479 and 1,921 ms for the small document, and 2,044 ms for the long document. Treat differences under about 30% as noise.
 
