@@ -2,9 +2,9 @@
 
 A lightweight Linux desktop editor for Microsoft Word `.docx` files: a small C++ GTK shell around an established DOCX engine, with a minimal interface.
 
-> **Status: Milestone 3 of 8.**
-> - **Done:** open a `.docx`, edit it, save it to a new file (crash-safe), and reopen it.
-> - **Not yet:** plain Save, unsaved-changes protection, and fuller formatting controls (Milestones 4–5).
+> **Status: Milestone 5 of 8.**
+> - **Done:** New, Open, Save and Save As with crash-safe saving and unsaved-change protection. File, Edit, Format and Help menus. A formatting toolbar with styles, headings, font, size, bold, italic, underline, alignment, lists and indent. Find, and keyboard shortcuts throughout.
+> - **Not yet:** compatibility hardening and Linux packaging (Milestones 6–7).
 >
 > See [`plan.md`](plan.md) for the roadmap.
 
@@ -30,12 +30,20 @@ cmake --build --preset debug     # also builds the UI (npm run build) and embeds
 ./build/debug/native/pagelite report.docx     # open a file directly
 ```
 
+Common shortcuts follow Word and LibreOffice:
+
 | Shortcut | Action |
 | --- | --- |
-| Ctrl+O | Open |
-| Ctrl+Shift+S (and Ctrl+S, for now) | Save As |
-| Ctrl+Z / Ctrl+Shift+Z | Undo / Redo |
+| Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S | New / Open / Save / Save As |
+| Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) | Undo / Redo |
 | Ctrl+B / Ctrl+I / Ctrl+U | Bold / Italic / Underline |
+| Ctrl+L / Ctrl+E / Ctrl+R / Ctrl+J | Align left / Center / Align right / Justify |
+| Ctrl+Alt+0 … Ctrl+Alt+3 | Normal text, Heading 1–3 |
+| Ctrl+Shift+L | Bulleted list |
+| Ctrl+Space | Clear formatting |
+| Ctrl+F, then F3 / Shift+F3 | Find, next / previous match |
+| Alt+F / Alt+E / Alt+O / Alt+H | Open the File / Edit / Format / Help menu |
+| F1 or Ctrl+/ | Every shortcut |
 
 To get a release build, use `cmake --preset release && cmake --build --preset release`.
 

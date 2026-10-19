@@ -7,6 +7,11 @@ describe('document session', () => {
     expect(windowTitle({ name: 'report.docx', path: '/home/u/report.docx' })).toBe('report.docx — PageLite');
   });
 
+  it('marks unsaved changes in the title', () => {
+    expect(windowTitle(UNTITLED, true)).toBe('• Untitled — PageLite');
+    expect(windowTitle({ name: 'a.docx', path: '/a.docx' }, false)).toBe('a.docx — PageLite');
+  });
+
   it('suggests a .docx name for Save As', () => {
     expect(suggestedSaveName(UNTITLED)).toBe('Untitled.docx');
     expect(suggestedSaveName({ name: 'report.docx', path: '/a/report.docx' })).toBe('report.docx');

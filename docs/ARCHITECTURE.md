@@ -13,21 +13,28 @@ pagelite (one binary)
 │  │  from memory (linked into the binary)  │
 │  ├─ navigation lock: only pagelite://app  └─ src/native/bridge.ts: typed window.pagelite_*
 │  ├─ bindings: window.pagelite_* ◄──────────── calls (JSON over WebKit message handler)
-│  ├─ GTK file dialogs (non-blocking)       ├─ src/document/: session (name, path), validation
-│  ├─ PathGrants: user-chosen paths only    │    before load, Open / Save As actions
+│  ├─ GTK file dialogs (non-blocking)       ├─ src/commands/: one command table → menus,
+│  │                                        │    toolbar, shortcuts, Help (ADR-8)
+│  │                                        ├─ src/document/: DocumentController (New, Open,
+│  ├─ PathGrants: user-chosen paths only    │    Save, Save As, close; unsaved-change guard),
+│  │                                        │    session, pre-load validation
 │  └─ file_io: bounded read, atomic write   └─ bytes cross the bridge as base64
 ```
 
-### Open → edit → Save As
+### File lifecycle
 
-1. **Open.** Ctrl+O calls `pagelite_openDocument`. The shell shows `GtkFileChooserNative`, records the chosen path in `PathGrants`, and reads it with `file_io::read_file`, which refuses files over 256 MB. It replies with `{path, name, data}`, where `data` is the file in base64.
-2. **Validate and load.** The UI decodes the bytes and runs the engine's bounded package reader (`validateDocx`). Only a file that passes replaces the open document (`editor.load`). A rejected file leaves the current document untouched and shows a readable error.
-3. **Save As.** Ctrl+Shift+S (or Ctrl+S, until Milestone 4) calls `pagelite_chooseSavePath`.
+`ui/src/document/controller.ts` (`DocumentController`) owns New, Open, Save, Save As and close. It is plain TypeScript: the editor, native file access and the "save changes?" prompt are injected, so every workflow is unit-tested without a window (`controller.test.ts`). `App.tsx` only wires it up.
+
+1. **Open (Ctrl+O).** Calls `pagelite_openDocument`. The shell shows `GtkFileChooserNative`, records the path in `PathGrants`, reads the file (`file_io::read_file`, 256 MB limit) and replies with `{path, name, data}`, where `data` is base64.
+   - **Validate first.** The controller checks the bytes with the engine's bounded package reader (`validateDocx`). A file that fails is reported without asking anything, and the open document is untouched.
+   - **Then ask.** Only then does it ask about unsaved changes and replace the document.
+2. **Save (Ctrl+S).** Writes to the current path with `pagelite_writeDocument`. An untitled document goes through Save As instead.
+3. **Save As (Ctrl+Shift+S).** Calls `pagelite_chooseSavePath`.
    - **Dialog.** It opens in the current file's folder and asks before overwriting. If `.docx` had to be added to the name, that path is refused rather than silently overwritten.
-   - **Bytes.** The UI then calls `editor.save()` to get the document bytes.
-   - **Write.** It sends them to `pagelite_writeDocument`, which writes atomically.
-   - **Result.** On success, the document takes the new name and path. On failure, the editor is untouched and the error is shown, so no edits are lost.
-4. **Reopen.** A document passed on the command line (`pagelite file.docx`) is granted and opened the same way at startup.
+   - **Write.** The controller then saves through the engine and writes atomically.
+4. **New (Ctrl+N).** Loads Word's blank template as "Untitled".
+5. **Close.** The window's × arrives through ADR-4's hook, and the controller decides.
+6. **Command line.** `pagelite file.docx` is granted and opened the same way at startup.
 
 ## Decisions
 
@@ -74,7 +81,7 @@ The GTK `delete-event` never closes the window by itself.
 - **After the UI has registered its handler** (`pagelite_registerCloseHandler`), the shell calls `window.__pagelite_requestClose()`. The window closes only when the UI answers with `pagelite_confirmClose`.
 - **If the UI never loaded**, there are no edits to lose, so the window closes directly.
 
-Milestone 4 adds the Save / Discard / Cancel prompt on top of this hook.
+The Save / Don't Save / Cancel prompt (ADR-7) is built on this hook.
 
 ### ADR-5: The UI can only touch files the user chose
 
@@ -101,6 +108,39 @@ Milestone 4 adds the Save / Discard / Cancel prompt on top of this hook.
   - Any failure removes the temporary file and leaves the original as it was.
 - **Error reporting.** Errors map to stable codes (`permission-denied`, `no-space`, `read-only-filesystem`, `directory-missing`, …) that the UI turns into messages. Covered in `native/tests/file_io_test.cpp`.
 
+### ADR-7: How unsaved changes are tracked
+
+- **Revisions.** The engine numbers every edit with a revision that only ever rises, and resets it to 0 on each load. An experiment in the app confirmed that every load emits a change with `source: "load"`.
+- **Rule.** A document is *modified* when its current revision differs from the revision last written to disk.
+- **Clean baseline.** That baseline resets on each load and on each successful save.
+- **Saving in flight.** The revision is captured *before* the engine serialises the document, so edits typed while a save is in progress stay marked as unsaved.
+- **Undo.** Undoing back to the saved text still counts as modified, because the revision does not go back. This matches Word.
+
+These rules guard every action that would lose work:
+
+- **When the prompt appears.** New, Open and close all go through one check. If the document is modified, the user gets a native `<dialog>`: Save / Don't Save / Cancel. Save is the default button, and Escape cancels.
+- **Save in the prompt.** Choosing Save runs Save, or Save As for an untitled document. The original action continues only if the save succeeded, so a cancelled or failed save keeps the document open with every edit.
+- **Concurrency.** File actions run one at a time, and a second request while a dialog is open is ignored.
+- **Where it shows.** The modified state appears as "• " in the window title and "• Edited" next to the file name in the toolbar.
+
+### ADR-8: One command table drives menus, toolbar, shortcuts and Help
+
+- **Problem.** The same action (say, Center) is reachable from the Format menu, a toolbar button, Ctrl+E and the Keyboard Shortcuts screen. If each of those had its own label, key and enabled logic, they would drift apart.
+- **Decision.** Two tables, both in `ui/src/commands/`:
+  - **`shortcuts.ts`** maps each `CommandId` to its keys and a scope. It is pure and unit-tested, including a check that no key combination is bound twice.
+  - **`useCommands.ts`** builds every command's label, action, enabled state and checked state from the `DocumentController` and the engine's headless hooks (`useEditorCommand`, `useParagraphStyle`).
+  - Menus, the toolbar, the global key handler and the Shortcuts dialog all read from these tables, so they cannot disagree.
+- **Shortcut scopes.**
+  - **`app`** keys (file, find, help) work wherever focus is.
+  - **`document`** keys (formatting, undo) are skipped while focus is in one of PageLite's own fields, so Ctrl+Z in the Find box undoes the typing in the box.
+  - **`native`** keys (cut, copy, paste, select all) are left to the editor, because paste needs the real clipboard event. They are listed only so menus and Help show them.
+- **Key choices.** Shortcuts follow Word and LibreOffice: Ctrl+E/L/R/J for alignment, Ctrl+Alt+0–3 for Normal and Heading 1–3, F3 for the next match. While a modal dialog is open, it owns the keyboard.
+- **Styles in any document.** Heading commands look the style up by Word's id (`Heading1`) first, then by its built-in name (`heading 1`), so they work in documents from other producers (`commands/styles.ts`). If a document lacks the style, the command is disabled instead of doing nothing silently.
+- **Menu bar.** `components/MenuBar.tsx` follows the WAI-ARIA menubar pattern:
+  - **Keys:** arrows, Home/End and Escape move around, and Alt+mnemonic opens a menu.
+  - **States:** `menuitemcheckbox` with `aria-checked` marks toggles, and `aria-disabled` items are skipped.
+  - **Focus:** running a command returns focus to the document first, so it acts on the user's selection.
+
 ## Repository layout
 
 | Path | Contents |
@@ -111,16 +151,20 @@ Milestone 4 adds the Save / Discard / Cancel prompt on top of this hook.
 | `native/cmake/embed_assets.cmake` | Build-time asset embedding |
 | `ui/` | Vite + React + TypeScript UI; Vitest tests; oxlint; Prettier |
 | `ui/src/native/` | Typed bridge to the shell (`bridge.ts`), base64 transfer (`base64.ts`) |
-| `ui/src/document/` | Document session state and pre-load validation; the only code besides `App.tsx` that knows the engine |
+| `ui/src/document/` | `DocumentController` (file lifecycle), session state, pre-load validation |
+| `ui/src/commands/` | Shortcut table, command table (`useCommands`), built-in style lookup |
+| `ui/src/components/` | Menu bar, toolbar, find bar, dialogs (save changes, shortcuts, about), icons |
 | `fixtures/docx/` | Synthetic DOCX compatibility corpus (Milestone 1) |
 | `poc/engine-eval/` | Engine round-trip harness behind `docs/ENGINE_EVALUATION.md` |
 
-## Known limitations (Milestone 3)
+## Known limitations (Milestone 5)
 
 - **Blocking save.** Saving runs on the GTK main thread, so a very large document briefly pauses the window while it is written.
 - **Bridge overhead.** Documents cross the bridge as base64 inside JSON, which costs about 33% in size plus a copy.
-- **No plain Save yet.** There is only Save As, and Ctrl+S opens the Save As dialog.
-- **No unsaved-changes warning.** Unsaved changes are not tracked, and closing the window does not warn. Both come in Milestone 4.
+- **Undo to the saved text.** The document still shows as modified (see ADR-7).
+- **No autosave or crash recovery.** If the app or session crashes, unsaved edits are lost.
+- **Menu Paste.** Edit → Paste reads the clipboard through `navigator.clipboard.readText()`, so it pastes plain text only. Ctrl+V keeps formatting, because it goes through the native paste event.
+- **Fonts.** The font list comes from the engine and the document. Fonts that are not installed render in a substitute face.
 
 ## Build
 

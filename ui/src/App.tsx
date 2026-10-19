@@ -1,191 +1,197 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { DocxEditor, useDocxEditor, useEditorCommand } from '@docx-editor.dev/react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { DocxEditor, useDocumentSearch, useDocxEditor } from '@docx-editor.dev/react';
+import type { Editor } from '@docx-editor.dev/core';
 import {
   appInfo,
   chooseSavePath,
-  NativeError,
+  closeWindow,
   onCloseRequested,
   openDocument,
   setWindowTitle,
   takeInitialDocument,
   writeDocument,
   type AppInfo,
-  type OpenedDocument,
 } from './native/bridge';
-import { suggestedSaveName, UNTITLED, windowTitle, type DocumentInfo } from './document/session';
+import { DocumentController, type DocumentState, type SaveChoice } from './document/controller';
+import { windowTitle } from './document/session';
 import { validateDocx } from './document/validate';
-
-type CommandSlot = Parameters<typeof useEditorCommand>[0];
-type Status = { kind: 'error' | 'info'; text: string } | null;
+import { commandForKey } from './commands/shortcuts';
+import { useCommands } from './commands/useCommands';
+import { AboutDialog } from './components/AboutDialog';
+import { FindBar } from './components/FindBar';
+import { MenuBar, type MenuSpec } from './components/MenuBar';
+import { SaveChangesDialog } from './components/SaveChangesDialog';
+import { ShortcutsDialog } from './components/ShortcutsDialog';
+import { Toolbar } from './components/Toolbar';
 
 const INFO_TIMEOUT_MS = 4000;
 
-/** A PageLite-owned toolbar button driving an engine command. */
-function CommandButton({ slot, label, shortcut }: { slot: CommandSlot; label: string; shortcut?: string }) {
-  const command = useEditorCommand(slot);
-  return (
-    <button
-      type="button"
-      className="tool"
-      title={shortcut ? `${label} (${shortcut})` : label}
-      aria-label={label}
-      aria-pressed={command.isActive}
-      disabled={!command.isEnabled}
-      onMouseDown={(e) => e.preventDefault() /* keep the caret in the document */}
-      onClick={() => command.execute()}
-    >
-      {label}
-    </button>
-  );
+const MENUS: MenuSpec[] = [
+  { label: 'File', mnemonic: 'f', items: ['file.new', 'file.open', '-', 'file.save', 'file.saveAs', '-', 'file.quit'] },
+  {
+    label: 'Edit',
+    mnemonic: 'e',
+    items: [
+      'edit.undo',
+      'edit.redo',
+      '-',
+      'edit.cut',
+      'edit.copy',
+      'edit.paste',
+      'edit.selectAll',
+      '-',
+      'edit.find',
+      'edit.findNext',
+      'edit.findPrevious',
+    ],
+  },
+  {
+    label: 'Format',
+    mnemonic: 'o',
+    items: [
+      'format.bold',
+      'format.italic',
+      'format.underline',
+      'format.strike',
+      '-',
+      'format.normal',
+      'format.title',
+      'format.heading1',
+      'format.heading2',
+      'format.heading3',
+      '-',
+      'format.alignLeft',
+      'format.alignCenter',
+      'format.alignRight',
+      'format.alignJustify',
+      '-',
+      'format.bullets',
+      'format.numbering',
+      'format.outdent',
+      'format.indent',
+      '-',
+      'format.clear',
+    ],
+  },
+  { label: 'Help', mnemonic: 'h', items: ['help.shortcuts', '-', 'help.about'] },
+];
+
+/** Pending "save changes?" question, answered by SaveChangesDialog. */
+type Prompt = { docName: string; answer: (choice: SaveChoice) => void };
+
+/**
+ * Builds the controller over the native shell and the editor. The engine creates the
+ * editor after first render, so it is attached later through `attachEditor`.
+ */
+function createController(setPrompt: (prompt: Prompt | null) => void) {
+  const editor: { current: Editor | null } = { current: null };
+  const controller = new DocumentController({
+    editor: {
+      load: (source) => editor.current?.load(source),
+      save: async () => {
+        if (!editor.current) throw new Error('The editor is not ready yet.');
+        return new Uint8Array(await editor.current.save());
+      },
+      revision: () => editor.current?.getDocumentHandle().revision ?? 0,
+    },
+    files: { openDocument, chooseSavePath, writeDocument },
+    validate: validateDocx,
+    askToSave: (docName) =>
+      new Promise<SaveChoice>((resolve) =>
+        setPrompt({
+          docName,
+          answer: (choice) => {
+            setPrompt(null);
+            resolve(choice);
+          },
+        }),
+      ),
+  });
+  const attachEditor = (ready: Editor) => {
+    editor.current = ready;
+  };
+  return { controller, attachEditor };
 }
 
-const describe = (error: unknown) =>
-  error instanceof NativeError ? error.message : error instanceof Error ? error.message : String(error);
+const isTextField = (target: EventTarget | null) =>
+  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
 
-function Workspace() {
+/** Everything inside the editor's Root: engine hooks are only available down here. */
+function Workspace({
+  controller,
+  state,
+  info,
+}: {
+  controller: DocumentController;
+  state: DocumentState;
+  info: AppInfo | null;
+}) {
   const editor = useDocxEditor();
-  const [doc, setDoc] = useState<DocumentInfo>(UNTITLED);
-  const [status, setStatus] = useState<Status>(null);
-  const [info, setInfo] = useState<AppInfo | null>(null);
-  const busy = useRef(false); // one file dialog or save at a time
+  const search = useDocumentSearch({ highlight: 'all' });
+  const [findOpen, setFindOpen] = useState(false);
+  const [findFocus, setFindFocus] = useState(0);
+  const [dialog, setDialog] = useState<'shortcuts' | 'about' | null>(null);
 
-  useEffect(() => {
-    void setWindowTitle(windowTitle(doc));
-  }, [doc]);
+  const openFind = () => {
+    setFindOpen(true);
+    setFindFocus((n) => n + 1);
+  };
+  const closeFind = () => {
+    search.clear();
+    setFindOpen(false);
+    editor?.focus();
+  };
 
-  useEffect(() => {
-    if (status?.kind !== 'info') return;
-    const timer = setTimeout(() => setStatus(null), INFO_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [status]);
-
-  useEffect(() => {
-    void appInfo().then(setInfo);
-    // Nothing tracks unsaved changes yet, so closing is confirmed immediately.
-    // Milestone 4 replaces this with the Save / Discard / Cancel prompt.
-    return onCloseRequested((confirm) => void confirm());
-  }, []);
-
-  /** Replaces the open document, but only with a file the engine can actually read. */
-  const show = useCallback(
-    (opened: OpenedDocument) => {
-      if (!editor) return;
-      const validation = validateDocx(opened.bytes);
-      if (!validation.ok) {
-        setStatus({ kind: 'error', text: `${opened.name}: ${validation.reason}` });
-        return;
-      }
-      editor.load(opened.bytes);
-      setDoc({ name: opened.name, path: opened.path });
-      setStatus(null);
+  const commands = useCommands(controller, {
+    openFind,
+    findNext: () => (findOpen && search.query ? void search.next() : openFind()),
+    findPrevious: () => (findOpen && search.query ? void search.previous() : openFind()),
+    showShortcuts: () => setDialog('shortcuts'),
+    showAbout: () => setDialog('about'),
+    quit: () => {
+      void controller.requestClose().then((ok) => {
+        if (ok) void closeWindow();
+      });
     },
-    [editor],
-  );
+  });
 
-  const exclusive = useCallback(async (task: () => Promise<void>) => {
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      await task();
-    } finally {
-      busy.current = false;
-    }
-  }, []);
-
-  const open = useCallback(
-    () =>
-      exclusive(async () => {
-        try {
-          const opened = await openDocument();
-          if (opened) show(opened);
-        } catch (error) {
-          setStatus({ kind: 'error', text: `Couldn't open the file: ${describe(error)}` });
-        }
-      }),
-    [exclusive, show],
-  );
-
-  const saveAs = useCallback(
-    () =>
-      exclusive(async () => {
-        if (!editor) return;
-        try {
-          const target = await chooseSavePath(suggestedSaveName(doc), doc.path);
-          if (!target) return;
-          const bytes = new Uint8Array(await editor.save());
-          await writeDocument(target.path, bytes);
-          // Only now is the document associated with the new file.
-          setDoc(target);
-          setStatus({ kind: 'info', text: `Saved ${target.name}` });
-        } catch (error) {
-          setStatus({
-            kind: 'error',
-            text: `Couldn't save: ${describe(error)} Your changes are still here; try another location.`,
-          });
-        }
-      }),
-    [editor, exclusive, doc],
-  );
-
-  // A document named on the command line opens as soon as the editor exists.
-  useEffect(() => {
-    if (!editor) return;
-    takeInitialDocument().then(
-      (opened) => opened && show(opened),
-      (error: unknown) => setStatus({ kind: 'error', text: `Couldn't open the file: ${describe(error)}` }),
-    );
-  }, [editor, show]);
-
-  // Captured before the editor sees the keys, so Ctrl+O/S never reach the document.
+  // Global shortcuts, captured before the editor sees the keys. Modal dialogs own the
+  // keyboard while open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
-      const key = e.key.toLowerCase();
-      if (key === 'o' && !e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        void open();
-      } else if (key === 's') {
-        // Ctrl+S is Save As until Milestone 4 adds Save.
-        e.preventDefault();
-        e.stopPropagation();
-        void saveAs();
-      }
+      if (document.querySelector('dialog[open]')) return;
+      const id = commandForKey(e, isTextField(e.target));
+      if (!id) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (commands[id].enabled) commands[id].run();
     };
     window.addEventListener('keydown', onKey, { capture: true });
     return () => window.removeEventListener('keydown', onKey, { capture: true });
-  }, [open, saveAs]);
+  }, [commands]);
 
+  const { info: doc, modified, notice } = state;
   return (
     <div className="shell">
-      <header className="toolbar" role="toolbar" aria-label="Document">
-        <button type="button" className="tool" title="Open (Ctrl+O)" onClick={() => void open()}>
-          Open…
-        </button>
-        <button type="button" className="tool" title="Save As (Ctrl+Shift+S)" onClick={() => void saveAs()}>
-          Save As…
-        </button>
-        <span className="separator" />
-        <CommandButton slot="history.undo" label="Undo" shortcut="Ctrl+Z" />
-        <CommandButton slot="history.redo" label="Redo" shortcut="Ctrl+Shift+Z" />
-        <span className="separator" />
-        <CommandButton slot="text.bold" label="Bold" shortcut="Ctrl+B" />
-        <CommandButton slot="text.italic" label="Italic" shortcut="Ctrl+I" />
-        <CommandButton slot="text.underline" label="Underline" shortcut="Ctrl+U" />
-        <span className="separator" />
-        <CommandButton slot="list.bullet" label="Bullets" />
-        <CommandButton slot="list.numbered" label="Numbering" />
+      <header className="titlebar">
+        <MenuBar menus={MENUS} commands={commands} />
         <span className="spacer" />
-        {info && (
-          <span className="version">
-            {info.name} {info.version} · WebKitGTK {info.webkitVersion}
-          </span>
-        )}
+        <span className="doc-name" title={doc.path ?? 'Not saved yet'}>
+          {doc.name}
+          {modified && (
+            <span className="modified" aria-label="unsaved changes">
+              {' '}
+              • Edited
+            </span>
+          )}
+        </span>
       </header>
-      {status && (
-        <div className={`status status-${status.kind}`} role={status.kind === 'error' ? 'alert' : 'status'}>
-          <span>{status.text}</span>
-          <button type="button" className="tool" aria-label="Dismiss" onClick={() => setStatus(null)}>
+      <Toolbar commands={commands} />
+      {findOpen && <FindBar search={search} focusToken={findFocus} onClose={closeFind} />}
+      {notice && (
+        <div className={`status status-${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>
+          <span>{notice.text}</span>
+          <button type="button" className="tool" aria-label="Dismiss" onClick={controller.dismissNotice}>
             ×
           </button>
         </div>
@@ -195,14 +201,55 @@ function Workspace() {
           <DocxEditor.Content />
         </DocxEditor.Viewport>
       </main>
+      {dialog === 'shortcuts' && <ShortcutsDialog commands={commands} onClose={() => setDialog(null)} />}
+      {dialog === 'about' && <AboutDialog info={info} onClose={() => setDialog(null)} />}
     </div>
   );
 }
 
 export function App() {
+  const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const [info, setInfo] = useState<AppInfo | null>(null);
+  const [{ controller, attachEditor }] = useState(() => createController(setPrompt));
+  const state = useSyncExternalStore(controller.subscribe, controller.getState);
+
+  useEffect(() => {
+    void setWindowTitle(windowTitle(state.info, state.modified));
+  }, [state.info, state.modified]);
+
+  useEffect(() => {
+    if (state.notice?.kind !== 'info') return;
+    const timer = setTimeout(controller.dismissNotice, INFO_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [state.notice, controller]);
+
+  useEffect(() => {
+    void appInfo().then(setInfo);
+    // The window's close button lands here; it closes only once nothing would be lost.
+    return onCloseRequested((confirm) => {
+      void controller.requestClose().then((ok) => {
+        if (ok) void confirm();
+      });
+    });
+  }, [controller]);
+
+  const onReady = (ready: Editor) => {
+    attachEditor(ready);
+    // A document named on the command line opens as soon as the editor exists.
+    takeInitialDocument().then(
+      (opened) => opened && controller.openInitial(opened),
+      (error: unknown) =>
+        controller.notify({
+          kind: 'error',
+          text: `Couldn't open the file: ${error instanceof Error ? error.message : String(error)}`,
+        }),
+    );
+  };
+
   return (
-    <DocxEditor.Root document="blank" mode="edit">
-      <Workspace />
+    <DocxEditor.Root document="blank" mode="edit" onReady={onReady} onChange={controller.noteChange}>
+      <Workspace controller={controller} state={state} info={info} />
+      {prompt && <SaveChangesDialog docName={prompt.docName} onChoice={prompt.answer} />}
     </DocxEditor.Root>
   );
 }

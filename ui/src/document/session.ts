@@ -9,8 +9,9 @@ export interface DocumentInfo {
 
 export const UNTITLED: DocumentInfo = { name: 'Untitled', path: null };
 
-export function windowTitle(doc: DocumentInfo): string {
-  return `${doc.name} — PageLite`;
+/** "report.docx — PageLite", with a leading "• " while there are unsaved changes. */
+export function windowTitle(doc: DocumentInfo, modified = false): string {
+  return `${modified ? '• ' : ''}${doc.name} — PageLite`;
 }
 
 /** Name pre-filled in the Save As dialog. */

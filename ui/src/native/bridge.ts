@@ -120,3 +120,8 @@ export async function writeDocument(path: string, bytes: Uint8Array): Promise<vo
   const n = native();
   await call(n.pagelite_writeDocument && (() => n.pagelite_writeDocument!(path, bytesToBase64(bytes))));
 }
+
+/** Closes the window immediately. Callers must have resolved unsaved changes first. */
+export async function closeWindow(): Promise<void> {
+  await native().pagelite_confirmClose?.();
+}
