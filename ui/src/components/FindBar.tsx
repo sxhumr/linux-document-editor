@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { matchCountLabel, type Search } from './findLabel';
+import { keepingFocus } from './keepFocus';
 
 /**
  * Find bar under the toolbar. Typing searches incrementally and selects the first match;
@@ -18,7 +19,7 @@ export function FindBar({ search, focusToken, onClose }: { search: Search; focus
   // Jump to the first match once results arrive, like incremental search in Word/gedit.
   const { matches, activeIndex, goTo } = search;
   useEffect(() => {
-    if (matches.length > 0 && activeIndex < 0) goTo(0);
+    if (matches.length > 0 && activeIndex < 0) keepingFocus(() => goTo(0));
   }, [matches, activeIndex, goTo]);
 
   return (
@@ -34,8 +35,7 @@ export function FindBar({ search, focusToken, onClose }: { search: Search; focus
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (e.shiftKey) search.previous();
-            else search.next();
+            keepingFocus(() => (e.shiftKey ? search.previous() : search.next()));
           } else if (e.key === 'Escape') {
             e.preventDefault();
             onClose();
@@ -51,7 +51,7 @@ export function FindBar({ search, focusToken, onClose }: { search: Search; focus
         title="Previous match (Shift+Enter)"
         aria-label="Previous match"
         disabled={search.matches.length === 0}
-        onClick={() => search.previous()}
+        onClick={() => keepingFocus(() => search.previous())}
       >
         ↑
       </button>
@@ -61,7 +61,7 @@ export function FindBar({ search, focusToken, onClose }: { search: Search; focus
         title="Next match (Enter)"
         aria-label="Next match"
         disabled={search.matches.length === 0}
-        onClick={() => search.next()}
+        onClick={() => keepingFocus(() => search.next())}
       >
         ↓
       </button>

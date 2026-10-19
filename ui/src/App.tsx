@@ -19,6 +19,7 @@ import { validateDocx } from './document/validate';
 import { commandForKey } from './commands/shortcuts';
 import { useCommands } from './commands/useCommands';
 import { AboutDialog } from './components/AboutDialog';
+import { keepingFocus } from './components/keepFocus';
 import { FindBar } from './components/FindBar';
 import { MenuBar, type MenuSpec } from './components/MenuBar';
 import { SaveChangesDialog } from './components/SaveChangesDialog';
@@ -145,8 +146,8 @@ function Workspace({
 
   const commands = useCommands(controller, {
     openFind,
-    findNext: () => (findOpen && search.query ? void search.next() : openFind()),
-    findPrevious: () => (findOpen && search.query ? void search.previous() : openFind()),
+    findNext: () => (findOpen && search.query ? keepingFocus(() => search.next()) : openFind()),
+    findPrevious: () => (findOpen && search.query ? keepingFocus(() => search.previous()) : openFind()),
     showShortcuts: () => setDialog('shortcuts'),
     showAbout: () => setDialog('about'),
     quit: () => {

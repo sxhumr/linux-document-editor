@@ -108,18 +108,25 @@ Measured 2026-10-19 with a release build of `526982a` plus the Milestone 6 chang
 
 Result on 2026-10-19: passed. Docker pulled `ubuntu:24.04` (sha256:68ee2200…), apt installed the package and its dependencies, and all 129 libraries resolved. The app reported `document-opened` 2.2 s after `main()` on the virtual display.
 
-What the container cannot show, a person checks after installing on a real desktop (checklist item 6).
+What the container cannot show, a person checks after installing on a real desktop (checklist item 7).
+
+## Screenshots and demo
+
+`scripts/capture-media.sh` installs the package on a clean container with a 2× virtual display and opens `docs/media/demo.docx` (made by `ui/scripts/make-demo-document.ts`). It then drives the app with `xdotool` and writes the README images and `demo.gif`. Every step uses the keyboard, with the app's own Find placing the cursor, so the run does not depend on layout.
+
+The run is also an end-to-end check in real WebKit. While making the screenshots, it found that typing into Find at normal speed moved keyboard focus into the document, so the next keys overwrote the selected match. The fix is `keepingFocus`, which has unit tests in `FindBar.test.tsx`. The capture now types into Find at 250 ms per key and must leave the document unmodified.
 
 ## Manual checklist
 
 Run before a release, with `./build/release/native/pagelite`:
 
 1. **Round trip in the app.** Open `fixtures/docx/comments.docx`, `tracked-changes.docx` and `hyperlinks.docx` in turn. For each, edit a paragraph, Save As a new file, then open the result in LibreOffice: the comments, tracked changes and links must still be there.
-2. **Typing after a link.** In `hyperlinks.docx`, put the caret at the end of "jump to appendix" and type. Note whether the new text looks like a link (see [COMPATIBILITY.md](COMPATIBILITY.md#differences)).
-3. **Refused files.** Open each `fixtures/docx/malformed-*.docx`. A readable error must appear, and the open document must stay as it was.
-4. **Save failures.** Save into a read-only folder. An error must appear, the document must stay marked modified, and the edits must stay.
-5. **Unsaved changes.** Edit, then press Ctrl+Q, Ctrl+N and Ctrl+O, and click the window's ×. Each must offer Save, Discard and Cancel.
-6. **Installed package on the desktop.** After `sudo apt install ./pagelite_*.deb`:
+2. **Find while typing.** Press Ctrl+F and type a word slowly, then press Enter and Shift+Enter. Every key must go into the Find box, and the document must not show "Edited".
+3. **Typing after a link.** In `hyperlinks.docx`, put the caret at the end of "jump to appendix" and type. Note whether the new text looks like a link (see [COMPATIBILITY.md](COMPATIBILITY.md#differences)).
+4. **Refused files.** Open each `fixtures/docx/malformed-*.docx`. A readable error must appear, and the open document must stay as it was.
+5. **Save failures.** Save into a read-only folder. An error must appear, the document must stay marked modified, and the edits must stay.
+6. **Unsaved changes.** Edit, then press Ctrl+Q, Ctrl+N and Ctrl+O, and click the window's ×. Each must offer Save, Discard and Cancel.
+7. **Installed package on the desktop.** After `sudo apt install ./pagelite_*.deb`:
    - PageLite appears in the app grid with its icon.
    - Its running window shows the PageLite icon and name in the dock, not a generic one.
    - Right-clicking a `.docx` in the file manager offers **Open With → PageLite**, and that opens the file.

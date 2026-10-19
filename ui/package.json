@@ -12,7 +12,8 @@
     "fixtures": "node tests/compatibility/fixtures/make-fixtures.ts && tests/compatibility/fixtures/make-libreoffice-fixtures.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "demo-document": "node scripts/make-demo-document.ts"
   },
   "dependencies": {
     "@docx-editor.dev/core": "2.30.0",

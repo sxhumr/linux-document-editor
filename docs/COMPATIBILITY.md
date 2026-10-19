@@ -65,6 +65,13 @@ Binary parts such as images are copied unchanged. Only `word/document.xml` chang
 
 Differences that come from LibreOffice's own conversion, not from PageLite, show up only in the LibreOffice fixtures and are already in the input: LibreOffice drops comment reply threading, fills in field results ("Page 1 of 1"), and adds explicit left alignment to right-to-left paragraphs.
 
+## Display differences
+
+The suite checks what is saved, not how it looks. These on-screen differences were seen while making the screenshots (2026-10-19). None of them changes the saved file.
+
+- **Tables without cell widths** (only a percentage width for the table, as docx.js writes them) are laid out by content, so columns can be uneven where LibreOffice makes them equal. Tables with cell widths, which Word always writes, match.
+- **Thin borders on 1× screens.** 0.5 pt table borders are under one pixel at 100% scaling, and some can disappear on screen. At 200% scaling, as on most laptops, they all show.
+
 ## Refused files
 
 The app checks every file with the engine's bounded package reader before it replaces the open document. These are refused with a readable message, and the open document is left alone:

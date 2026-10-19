@@ -22,6 +22,20 @@
       <li>Works offline and never sends documents anywhere</li>
     </ul>
   </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editing a document with headings, a list and a table</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/hero.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Format menu with check marks and keyboard shortcuts</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/format-menu.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Find highlights every match</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/find.png</image>
+    </screenshot>
+  </screenshots>
   <launchable type="desktop-id">io.github.sxhumr.PageLite.desktop</launchable>
   <url type="homepage">https://github.com/sxhumr/linux-document-editor</url>
   <url type="bugtracker">https://github.com/sxhumr/linux-document-editor/issues</url>

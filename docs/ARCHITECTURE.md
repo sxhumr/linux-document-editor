@@ -177,11 +177,12 @@ These rules guard every action that would lose work:
 | `ui/tests/compatibility/` | DOCX compatibility suite and fixture generators (ADR-9) |
 | `fixtures/docx/` | Generated synthetic corpus; `libreoffice/` holds the same documents re-saved by LibreOffice |
 | `scripts/measure.sh` | Startup and file-open timing (see TESTING.md) |
+| `scripts/capture-media.sh`, `ui/scripts/make-demo-document.ts` | README screenshots and demo, captured from the installed package (`docs/media/`) |
 | `packaging/` | Install rules and CPack `.deb` (ADR-10), desktop entry, icon, AppStream metadata, Debian `copyright`, notices generator, clean-container install test |
 | `LICENSE` | Apache License 2.0 |
 | `poc/engine-eval/` | Milestone 1 engine comparison behind `docs/ENGINE_EVALUATION.md` (kept as a record) |
 
-## Known limitations (Milestone 7)
+## Known limitations (Milestone 8)
 
 DOCX-specific limitations and evidence are in [COMPATIBILITY.md](COMPATIBILITY.md).
 
@@ -190,6 +191,7 @@ DOCX-specific limitations and evidence are in [COMPATIBILITY.md](COMPATIBILITY.m
 - **Undo to the saved text.** The document still shows as modified (see ADR-7).
 - **No autosave or crash recovery.** If the app or session crashes, unsaved edits are lost.
 - **Menu Paste.** Edit → Paste reads the clipboard through `navigator.clipboard.readText()`, so it pastes plain text only. Ctrl+V keeps formatting, because it goes through the native paste event.
+- **Font size picker.** It is blank when the size comes from the document's styles (for example the default 11 pt) rather than being set on the text. The engine reports no value for inherited sizes, though it does for inherited fonts. Sizes set on the text show correctly.
 - **Fonts.** The font list comes from the engine and the document. Fonts that are not installed render in a substitute face.
 - **Every XML part is rewritten on save.** The content is unchanged, but the bytes differ (no XML declaration, reordered namespaces). File-level diffs and some document-management tools will report every part as modified.
 - **Typing after a link** at the end of a paragraph gives the new text the link's style, though not the link itself (seen headlessly; see COMPATIBILITY.md).
