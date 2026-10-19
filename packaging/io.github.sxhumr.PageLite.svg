@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>PageLite</title>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef1f5"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M28 14h52l26 26v74a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6V20a6 6 0 0 1 6-6z" fill="#000" opacity=".14" transform="translate(0 3)"/>
+  <!-- sheet with folded corner -->
+  <path d="M28 12h52l26 26v74a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6V18a6 6 0 0 1 6-6z" fill="url(#page)" stroke="#c4cad3" stroke-width="2"/>
+  <path d="M80 12v20a6 6 0 0 0 6 6h20z" fill="#d6dce4"/>
+  <!-- heading and text lines -->
+  <rect x="36" y="34" width="34" height="9" rx="3" fill="#2f6fde"/>
+  <rect x="36" y="54" width="56" height="5" rx="2.5" fill="#9aa4b2"/>
+  <rect x="36" y="66" width="56" height="5" rx="2.5" fill="#9aa4b2"/>
+  <rect x="36" y="78" width="44" height="5" rx="2.5" fill="#9aa4b2"/>
+  <!-- caret -->
+  <rect x="84" y="74" width="4" height="22" rx="2" fill="#2f6fde"/>
+  <rect x="36" y="90" width="38" height="5" rx="2.5" fill="#9aa4b2"/>
+</svg>

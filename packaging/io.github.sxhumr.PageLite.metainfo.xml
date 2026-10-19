@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.sxhumr.PageLite</id>
+  <name>PageLite</name>
+  <summary>Edit Word documents in a fast, uncluttered window</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <developer id="io.github.sxhumr">
+    <name>Sohum Ramouthar</name>
+  </developer>
+  <description>
+    <p>
+      PageLite opens, edits and saves Microsoft Word (.docx) files without the menus,
+      ribbons and panels of a full office suite. It keeps the parts of a document it
+      doesn't edit, such as comments, tracked changes, footnotes and fields, exactly
+      as they were.
+    </p>
+    <ul>
+      <li>Headings, bold, italic, underline, fonts, alignment and lists</li>
+      <li>Find, undo and redo, and Word-style keyboard shortcuts</li>
+      <li>Crash-safe saving, and a prompt before unsaved changes are lost</li>
+      <li>Works offline and never sends documents anywhere</li>
+    </ul>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editing a document with headings, a list and a table</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/hero.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Format menu with check marks and keyboard shortcuts</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/format-menu.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Find highlights every match</caption>
+      <image>https://raw.githubusercontent.com/sxhumr/linux-document-editor/main/docs/media/find.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">io.github.sxhumr.PageLite.desktop</launchable>
+  <url type="homepage">https://github.com/sxhumr/linux-document-editor</url>
+  <url type="bugtracker">https://github.com/sxhumr/linux-document-editor/issues</url>
+  <provides>
+    <binary>pagelite</binary>
+    <mediatype>application/vnd.openxmlformats-officedocument.wordprocessingml.document</mediatype>
+  </provides>
+  <categories>
+    <category>Office</category>
+    <category>WordProcessor</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-10-19">
+      <description>
+        <p>First packaged release: open, edit and save .docx files, with formatting, find and shortcuts.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,0 +1,21 @@
+{
+  "name": "pagelite-engine-eval",
+  "description": "Milestone 1 DOCX engine round-trip proof of concept for PageLite",
+  "scripts": {
+    "eval": "node --no-warnings run.mjs && node report.mjs"
+  },
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@docx-editor.dev/core": "2.30.0",
+    "@xmldom/xmldom": "0.9.12",
+    "docx": "9.11.0",
+    "jszip": "3.10.2",
+    "linkedom": "0.18.13",
+    "mammoth": "1.13.0",
+    "superdoc": "1.47.2"
+  },
+  "engines": {
+    "node": ">=22.3.0"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug (dev tools, PAGELITE_DEV_SERVER support)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PAGELITE_BUILD_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "package",
+      "displayName": "Release build for the .deb package",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build/package",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "/usr"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "package",
+      "configurePreset": "package"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "deb",
+      "configurePreset": "package",
+      "generators": [
+        "DEB"
+      ],
+      "packageDirectory": "${sourceDir}/build/package/dist"
+    }
+  ]
+}

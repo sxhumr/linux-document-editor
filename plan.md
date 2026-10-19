@@ -306,19 +306,21 @@ Only list technologies and features actually implemented.
 
 ## 13. Definition of Done
 
-- [ ] Application launches on Linux.
-- [ ] User can create a document.
-- [ ] User can open an existing DOCX.
-- [ ] User can edit and format text.
-- [ ] Save and Save As work.
-- [ ] Unsaved changes are protected.
-- [ ] Save failures do not silently discard edits.
-- [ ] Saved files can be reopened.
-- [ ] DOCX compatibility tests have been performed.
-- [ ] Known limitations are documented.
-- [ ] Automated tests pass.
-- [ ] Linux packaging has been tested.
-- [ ] README includes setup, usage, and limitations.
+Status at release 0.1.0 (2026-10-19), with the evidence for each item:
+
+- [x] Application launches on Linux. Checked by hand on Ubuntu 24.04, and the installed package is launched in CI (`packaging/test-deb.sh`).
+- [x] User can create a document. File → New (Milestone 4), covered by `controller.test.ts`.
+- [x] User can open an existing DOCX. File → Open, the command line and Open With (Milestones 3, 4 and 7).
+- [x] User can edit and format text. Toolbar, menus and shortcuts (Milestone 5); see `docs/media/`.
+- [x] Save and Save As work. Atomic native writes (ADR-6), `file_io_test.cpp` and `controller.test.ts`.
+- [x] Unsaved changes are protected. Save / Discard / Cancel before New, Open, Quit and close (ADR-4, ADR-7).
+- [x] Save failures do not silently discard edits. `controller.test.ts`, and manual checklist item 5 in `docs/TESTING.md`.
+- [x] Saved files can be reopened. Every compatibility trip reopens its output in the engine and in LibreOffice.
+- [x] DOCX compatibility tests have been performed. `ui/tests/compatibility/` (35 documents, in CI); results in `docs/COMPATIBILITY.md`.
+- [x] Known limitations are documented. `docs/ARCHITECTURE.md` and `docs/COMPATIBILITY.md`.
+- [x] Automated tests pass. CI runs the UI, native and package jobs.
+- [x] Linux packaging has been tested. A clean Ubuntu 24.04 container install, run and removal, in CI.
+- [x] README includes setup, usage, and limitations.
 
 ## 14. Immediate Next Actions
 

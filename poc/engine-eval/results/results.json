@@ -1,0 +1,938 @@
+{
+  "node": "v26.5.1",
+  "platform": "linux-x64",
+  "adapters": {
+    "docx-editor-core": {
+      "label": "@docx-editor.dev/core 2.30.0",
+      "rows": [
+        {
+          "fixture": "basic-formatting",
+          "outFile": ".work/out/docx-editor-core/basic-formatting.docx",
+          "openMs": 36.298182,
+          "saveMs": 36.04893899999999,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "empty-document",
+          "outFile": ".work/out/docx-editor-core/empty-document.docx",
+          "openMs": 8.66190499999999,
+          "saveMs": 4.862313000000029,
+          "editApplied": false,
+          "reopenedParagraphs": 0,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": false
+        },
+        {
+          "fixture": "images",
+          "outFile": ".work/out/docx-editor-core/images.docx",
+          "openMs": 10.722812000000033,
+          "saveMs": 6.6604939999999715,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "layout-sections",
+          "outFile": ".work/out/docx-editor-core/layout-sections.docx",
+          "openMs": 13.262654999999995,
+          "saveMs": 6.973544000000004,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "lists",
+          "outFile": ".work/out/docx-editor-core/lists.docx",
+          "openMs": 15.239855999999975,
+          "saveMs": 8.319450000000018,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "long-document",
+          "outFile": ".work/out/docx-editor-core/long-document.docx",
+          "openMs": 207.79339099999993,
+          "saveMs": 108.45454299999994,
+          "editApplied": true,
+          "reopenedParagraphs": 2001,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "malformed-missing-document",
+          "status": "rejected",
+          "error": "rejected: no-main-document"
+        },
+        {
+          "fixture": "malformed-not-a-zip",
+          "status": "rejected",
+          "error": "rejected: inflate-error"
+        },
+        {
+          "fixture": "malformed-truncated",
+          "status": "rejected",
+          "error": "rejected: inflate-error"
+        },
+        {
+          "fixture": "tables",
+          "outFile": ".work/out/docx-editor-core/tables.docx",
+          "openMs": 8.25567500000011,
+          "saveMs": 5.51243599999998,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "unicode",
+          "outFile": ".work/out/docx-editor-core/unicode.docx",
+          "openMs": 8.846185999999989,
+          "saveMs": 4.468151999999918,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-basic-formatting",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-basic-formatting.docx",
+          "openMs": 8.170706999999993,
+          "saveMs": 4.46883600000001,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-images",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-images.docx",
+          "openMs": 6.509485000000041,
+          "saveMs": 3.538921000000073,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-layout-sections",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-layout-sections.docx",
+          "openMs": 7.3222209999998995,
+          "saveMs": 6.604923999999983,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-lists",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-lists.docx",
+          "openMs": 7.038139000000001,
+          "saveMs": 4.660237999999936,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-tables",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-tables.docx",
+          "openMs": 6.212931000000026,
+          "saveMs": 6.666208999999981,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-unicode",
+          "outFile": ".work/out/docx-editor-core/libreoffice/lo-unicode.docx",
+          "openMs": 5.019311000000016,
+          "saveMs": 3.657628000000159,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        }
+      ],
+      "longDocumentTiming": {
+        "runs": 5,
+        "openMsMedian": 249.80000299999847,
+        "saveMsMedian": 147.35448499999984
+      },
+      "networkAttempts": []
+    },
+    "superdoc": {
+      "label": "superdoc 1.47.2 (headless)",
+      "rows": [
+        {
+          "fixture": "basic-formatting",
+          "outFile": ".work/out/superdoc/basic-formatting.docx",
+          "openMs": 103.9128929999988,
+          "saveMs": 56.76926600000115,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "empty-document",
+          "outFile": ".work/out/superdoc/empty-document.docx",
+          "openMs": 15.64277199999924,
+          "saveMs": 15.646020000000135,
+          "editApplied": false,
+          "reopenedParagraphs": 0,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": false
+        },
+        {
+          "fixture": "images",
+          "outFile": ".work/out/superdoc/images.docx",
+          "openMs": 21.389369999998962,
+          "saveMs": 20.49155200000132,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "layout-sections",
+          "outFile": ".work/out/superdoc/layout-sections.docx",
+          "openMs": 20.37395000000106,
+          "saveMs": 23.939784000000145,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "lists",
+          "outFile": ".work/out/superdoc/lists.docx",
+          "openMs": 22.26448899999923,
+          "saveMs": 18.736446000000797,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "long-document",
+          "outFile": ".work/out/superdoc/long-document.docx",
+          "openMs": 3602.5826419999994,
+          "saveMs": 383.98443100000077,
+          "editApplied": true,
+          "reopenedParagraphs": 2001,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "malformed-missing-document",
+          "status": "rejected",
+          "error": "Failed to load document: Cannot read properties of undefined (reading 'replace')"
+        },
+        {
+          "fixture": "malformed-not-a-zip",
+          "status": "rejected",
+          "error": "Failed to load document: Can't find end of central directory : is this a zip file ? If it is, see https://stuk.github.io/jszip/documentation/howto/read_zip.html"
+        },
+        {
+          "fixture": "malformed-truncated",
+          "status": "rejected",
+          "error": "Failed to load document: Corrupted zip: can't find end of central directory"
+        },
+        {
+          "fixture": "tables",
+          "outFile": ".work/out/superdoc/tables.docx",
+          "openMs": 34.71133499999996,
+          "saveMs": 25.13611200000014,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "unicode",
+          "outFile": ".work/out/superdoc/unicode.docx",
+          "openMs": 16.779927999999927,
+          "saveMs": 15.478648000000248,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-basic-formatting",
+          "outFile": ".work/out/superdoc/libreoffice/lo-basic-formatting.docx",
+          "openMs": 31.323021000000153,
+          "saveMs": 18.45412099999885,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [
+            "fonts"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "fonts": {
+              "kept": false,
+              "expected": [
+                "Arial",
+                "Courier New"
+              ],
+              "actual": [
+                "Arial",
+                "Courier New",
+                "Times New Roman"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-images",
+          "outFile": ".work/out/superdoc/libreoffice/lo-images.docx",
+          "openMs": 15.487769999999728,
+          "saveMs": 13.663265999999567,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-layout-sections",
+          "outFile": ".work/out/superdoc/libreoffice/lo-layout-sections.docx",
+          "openMs": 26.165165999998862,
+          "saveMs": 29.096957999998267,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-lists",
+          "outFile": ".work/out/superdoc/libreoffice/lo-lists.docx",
+          "openMs": 21.92525899999964,
+          "saveMs": 12.977532000000792,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-tables",
+          "outFile": ".work/out/superdoc/libreoffice/lo-tables.docx",
+          "openMs": 20.105821000001015,
+          "saveMs": 12.248085999999603,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [
+            "fonts"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "fonts": {
+              "kept": false,
+              "expected": [],
+              "actual": [
+                "Times New Roman"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-unicode",
+          "outFile": ".work/out/superdoc/libreoffice/lo-unicode.docx",
+          "openMs": 16.690199000000575,
+          "saveMs": 10.168879000000743,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [
+            "fonts"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "fonts": {
+              "kept": false,
+              "expected": [],
+              "actual": [
+                "Times New Roman"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        }
+      ],
+      "longDocumentTiming": {
+        "runs": 5,
+        "openMsMedian": 3128.0112630000003,
+        "saveMsMedian": 310.79213499999605
+      },
+      "networkAttempts": []
+    },
+    "mammoth-docx": {
+      "label": "mammoth 1.13.0 + docx 9.11.0",
+      "rows": [
+        {
+          "fixture": "basic-formatting",
+          "outFile": ".work/out/mammoth-docx/basic-formatting.docx",
+          "openMs": 29.21341200000461,
+          "saveMs": 42.80562799999461,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [
+            "fonts",
+            "sizes",
+            "colors",
+            "alignment"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "fonts": {
+              "kept": false,
+              "expected": [
+                "Arial",
+                "Courier New",
+                "Times New Roman"
+              ],
+              "actual": []
+            },
+            "sizes": {
+              "kept": false,
+              "expected": [
+                "18",
+                "28",
+                "40"
+              ],
+              "actual": []
+            },
+            "colors": {
+              "kept": false,
+              "expected": [
+                "C00000"
+              ],
+              "actual": []
+            },
+            "alignment": {
+              "kept": false,
+              "expected": [
+                "center: Centred paragraph.",
+                "right: Right-aligned paragraph.",
+                "both: Justified paragraph with enough words to wrap across more than one line on a standard page width."
+              ],
+              "actual": []
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "empty-document",
+          "outFile": ".work/out/mammoth-docx/empty-document.docx",
+          "openMs": 8.740128000004916,
+          "saveMs": 14.737286999996286,
+          "editApplied": false,
+          "reopenedParagraphs": 0,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": false
+        },
+        {
+          "fixture": "images",
+          "outFile": ".work/out/mammoth-docx/images.docx",
+          "openMs": 12.236123000002408,
+          "saveMs": 18.01930999999604,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [
+            "images"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "images": {
+              "kept": false,
+              "expected": [
+                "e3c04068320d@609600x304800",
+                "0b406a7f8dff@457200x457200"
+              ],
+              "actual": [
+                "e3c04068320d@609600x609600",
+                "0b406a7f8dff@609600x609600"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "layout-sections",
+          "outFile": ".work/out/mammoth-docx/layout-sections.docx",
+          "openMs": 8.677784999999858,
+          "saveMs": 11.613773999997647,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [
+            "pageBreaks",
+            "sections",
+            "headers",
+            "footers"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "pageBreaks": {
+              "kept": false,
+              "expected": 1,
+              "actual": 0
+            },
+            "sections": {
+              "kept": false,
+              "expected": [
+                "portrait",
+                "landscape"
+              ],
+              "actual": [
+                "portrait"
+              ]
+            },
+            "headers": {
+              "kept": false,
+              "expected": [
+                "Header text section one",
+                "Header text section two"
+              ],
+              "actual": []
+            },
+            "footers": {
+              "kept": false,
+              "expected": [
+                "Footer text section one"
+              ],
+              "actual": []
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "lists",
+          "outFile": ".work/out/mammoth-docx/lists.docx",
+          "openMs": 10.728339000001142,
+          "saveMs": 13.015314999996917,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [
+            "listItems"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "listItems": {
+              "kept": false,
+              "expected": [
+                "bullet@0: Bullet one",
+                "bullet@1: Bullet nested",
+                "bullet@2: Bullet nested deeper",
+                "bullet@0: Bullet two",
+                "decimal@0: Number one",
+                "lowerLetter@1: Number nested a",
+                "lowerLetter@1: Number nested b",
+                "decimal@0: Number two"
+              ],
+              "actual": [
+                "bullet@0: Bullet one",
+                "bullet@1: Bullet nested",
+                "bullet@2: Bullet nested deeper",
+                "bullet@0: Bullet two",
+                "decimal@0: Number one",
+                "decimal@1: Number nested a",
+                "decimal@1: Number nested b",
+                "decimal@0: Number two"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "long-document",
+          "outFile": ".work/out/mammoth-docx/long-document.docx",
+          "openMs": 202.67129899999418,
+          "saveMs": 120.74670500000502,
+          "editApplied": true,
+          "reopenedParagraphs": 2001,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "malformed-missing-document",
+          "status": "rejected",
+          "error": "Could not find main document part. Are you sure this is a valid .docx file?"
+        },
+        {
+          "fixture": "malformed-not-a-zip",
+          "status": "rejected",
+          "error": "Can't find end of central directory : is this a zip file ? If it is, see https://stuk.github.io/jszip/documentation/howto/read_zip.html"
+        },
+        {
+          "fixture": "malformed-truncated",
+          "status": "rejected",
+          "error": "Corrupted zip: can't find end of central directory"
+        },
+        {
+          "fixture": "tables",
+          "outFile": ".work/out/mammoth-docx/tables.docx",
+          "openMs": 11.40526900000259,
+          "saveMs": 17.760709000001953,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "unicode",
+          "outFile": ".work/out/mammoth-docx/unicode.docx",
+          "openMs": 7.7219980000008945,
+          "saveMs": 16.504312000004575,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-basic-formatting",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-basic-formatting.docx",
+          "openMs": 8.166668999998365,
+          "saveMs": 14.78853700000036,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [
+            "fonts",
+            "sizes",
+            "colors",
+            "alignment"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "fonts": {
+              "kept": false,
+              "expected": [
+                "Arial",
+                "Courier New"
+              ],
+              "actual": []
+            },
+            "sizes": {
+              "kept": false,
+              "expected": [
+                "18",
+                "28",
+                "40"
+              ],
+              "actual": []
+            },
+            "colors": {
+              "kept": false,
+              "expected": [
+                "C00000"
+              ],
+              "actual": []
+            },
+            "alignment": {
+              "kept": false,
+              "expected": [
+                "center: Centred paragraph.",
+                "right: Right-aligned paragraph.",
+                "both: Justified paragraph with enough words to wrap across more than one line on a standard page width."
+              ],
+              "actual": []
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-images",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-images.docx",
+          "openMs": 6.467622000003757,
+          "saveMs": 12.385834000000614,
+          "editApplied": true,
+          "reopenedParagraphs": 3,
+          "lost": [
+            "images"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "images": {
+              "kept": false,
+              "expected": [
+                "e3c04068320d@609600x304800",
+                "0b406a7f8dff@457200x457200"
+              ],
+              "actual": [
+                "e3c04068320d@609600x609600",
+                "0b406a7f8dff@609600x609600"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-layout-sections",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-layout-sections.docx",
+          "openMs": 7.037392999998701,
+          "saveMs": 10.664443000001484,
+          "editApplied": true,
+          "reopenedParagraphs": 5,
+          "lost": [
+            "pageBreaks",
+            "sections",
+            "headers",
+            "footers"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "pageBreaks": {
+              "kept": false,
+              "expected": 1,
+              "actual": 0
+            },
+            "sections": {
+              "kept": false,
+              "expected": [
+                "portrait",
+                "landscape"
+              ],
+              "actual": [
+                "portrait"
+              ]
+            },
+            "headers": {
+              "kept": false,
+              "expected": [
+                "Header text section one",
+                "Header text section two"
+              ],
+              "actual": []
+            },
+            "footers": {
+              "kept": false,
+              "expected": [
+                "Footer text section one"
+              ],
+              "actual": []
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-lists",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-lists.docx",
+          "openMs": 9.416443000001891,
+          "saveMs": 13.185732999998436,
+          "editApplied": true,
+          "reopenedParagraphs": 10,
+          "lost": [
+            "listItems"
+          ],
+          "emptyParagraphsDelta": 0,
+          "diffs": {
+            "listItems": {
+              "kept": false,
+              "expected": [
+                "bullet@0: Bullet one",
+                "bullet@1: Bullet nested",
+                "bullet@2: Bullet nested deeper",
+                "bullet@0: Bullet two",
+                "decimal@0: Number one",
+                "lowerLetter@1: Number nested a",
+                "lowerLetter@1: Number nested b",
+                "decimal@0: Number two"
+              ],
+              "actual": [
+                "bullet@0: Bullet one",
+                "bullet@1: Bullet nested",
+                "bullet@2: Bullet nested deeper",
+                "bullet@0: Bullet two",
+                "decimal@0: Number one",
+                "decimal@1: Number nested a",
+                "decimal@1: Number nested b",
+                "decimal@0: Number two"
+              ]
+            }
+          },
+          "status": "lossy",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-tables",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-tables.docx",
+          "openMs": 5.908844000005047,
+          "saveMs": 10.096643999997468,
+          "editApplied": true,
+          "reopenedParagraphs": 11,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        },
+        {
+          "fixture": "libreoffice/lo-unicode",
+          "outFile": ".work/out/mammoth-docx/libreoffice/lo-unicode.docx",
+          "openMs": 5.869781999994302,
+          "saveMs": 9.495259000002989,
+          "editApplied": true,
+          "reopenedParagraphs": 6,
+          "lost": [],
+          "emptyParagraphsDelta": 0,
+          "diffs": {},
+          "status": "kept",
+          "libreoffice": "opened",
+          "libreofficeSeesEdit": true
+        }
+      ],
+      "longDocumentTiming": {
+        "runs": 5,
+        "openMsMedian": 196.15759600000456,
+        "saveMsMedian": 67.48520900000585
+      },
+      "networkAttempts": []
+    }
+  }
+}
