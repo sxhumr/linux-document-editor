@@ -141,6 +141,16 @@ These rules guard every action that would lose work:
   - **States:** `menuitemcheckbox` with `aria-checked` marks toggles, and `aria-disabled` items are skipped.
   - **Focus:** running a command returns focus to the document first, so it acts on the user's selection.
 
+### ADR-9: Compatibility is tested through the engine's headless host, against an independent reader (2026-10-19)
+
+- **Problem.** "Formatting is preserved" needs evidence on every change, not a one-off check. The Milestone 1 harness used the engine's low-level store, was not in CI, and pinned its own copy of the engine.
+- **Decision.** The compatibility suite lives in `ui/tests/compatibility/` and runs with the UI tests in CI, using the same engine version the app ships.
+  - **Engine side.** Documents go through `createServerAutomationHost`, the engine's DOM-free twin of the editor, which uses the same reader, edit operations and serializer. The app's own `validateDocx` runs before and after.
+  - **Licence.** The host ships in the Apache-2.0 `@docx-editor.dev/core` package (`/automation` export), not the paid `editor-api`, and imports nothing outside `core`. Only the tests use it.
+  - **Judge.** The judge is a separate OOXML reader (JSZip + xmldom) that shares no code with the engine. Package parts are compared as canonical XML, because the engine re-serializes every XML part. Bytes would always differ, but the content must not.
+  - **Accepted differences.** These are listed with reasons in `known-losses.ts`. A listed loss that stops happening fails the suite.
+- **Consequences.** Upgrading the engine is a test run, not a manual review. The browser editor's own `save()` path is not exercised headlessly; the manual checklist in [TESTING.md](TESTING.md) covers it.
+
 ## Repository layout
 
 | Path | Contents |
@@ -154,10 +164,14 @@ These rules guard every action that would lose work:
 | `ui/src/document/` | `DocumentController` (file lifecycle), session state, pre-load validation |
 | `ui/src/commands/` | Shortcut table, command table (`useCommands`), built-in style lookup |
 | `ui/src/components/` | Menu bar, toolbar, find bar, dialogs (save changes, shortcuts, about), icons |
-| `fixtures/docx/` | Synthetic DOCX compatibility corpus (Milestone 1) |
-| `poc/engine-eval/` | Engine round-trip harness behind `docs/ENGINE_EVALUATION.md` |
+| `ui/tests/compatibility/` | DOCX compatibility suite and fixture generators (ADR-9) |
+| `fixtures/docx/` | Generated synthetic corpus; `libreoffice/` holds the same documents re-saved by LibreOffice |
+| `scripts/measure.sh` | Startup and file-open timing (see TESTING.md) |
+| `poc/engine-eval/` | Milestone 1 engine comparison behind `docs/ENGINE_EVALUATION.md` (kept as a record) |
 
-## Known limitations (Milestone 5)
+## Known limitations (Milestone 6)
+
+DOCX-specific limitations and evidence are in [COMPATIBILITY.md](COMPATIBILITY.md).
 
 - **Blocking save.** Saving runs on the GTK main thread, so a very large document briefly pauses the window while it is written.
 - **Bridge overhead.** Documents cross the bridge as base64 inside JSON, which costs about 33% in size plus a copy.
@@ -165,6 +179,10 @@ These rules guard every action that would lose work:
 - **No autosave or crash recovery.** If the app or session crashes, unsaved edits are lost.
 - **Menu Paste.** Edit → Paste reads the clipboard through `navigator.clipboard.readText()`, so it pastes plain text only. Ctrl+V keeps formatting, because it goes through the native paste event.
 - **Fonts.** The font list comes from the engine and the document. Fonts that are not installed render in a substitute face.
+- **Every XML part is rewritten on save.** The content is unchanged, but the bytes differ (no XML declaration, reordered namespaces). File-level diffs and some document-management tools will report every part as modified.
+- **Typing after a link** at the end of a paragraph gives the new text the link's style, though not the link itself (seen headlessly; see COMPATIBILITY.md).
+- **Not checked in Microsoft Word.** Saved files are verified structurally and in LibreOffice only.
+- **Startup timing mode.** `PAGELITE_MEASURE=1` makes the shell print timings and quit once startup is done. It is meant for `scripts/measure.sh`; the binding does not exist otherwise.
 
 ## Build
 

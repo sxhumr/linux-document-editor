@@ -3,6 +3,7 @@ import {
   appInfo,
   chooseSavePath,
   isNativeShell,
+  markAfterPaint,
   NativeError,
   onCloseRequested,
   openDocument,
@@ -23,6 +24,7 @@ const bound = [
   'pagelite_takeInitialDocument',
   'pagelite_chooseSavePath',
   'pagelite_writeDocument',
+  'pagelite_mark',
 ];
 
 afterEach(() => {
@@ -109,5 +111,27 @@ describe('documents', () => {
   it('reports file access as unavailable outside the desktop app', async () => {
     await expect(openDocument()).rejects.toMatchObject({ code: 'unavailable' });
     expect(await takeInitialDocument()).toBeNull();
+  });
+});
+
+describe('startup timing marks', () => {
+  it('do nothing unless the shell is measuring', () => {
+    const raf = vi.spyOn(window, 'requestAnimationFrame');
+    markAfterPaint('ui-ready');
+    expect(raf).not.toHaveBeenCalled();
+    raf.mockRestore();
+  });
+
+  it('report the phase after the next painted frame', () => {
+    const frames: FrameRequestCallback[] = [];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb));
+    const mark = vi.fn(async () => null);
+    win.pagelite_mark = mark;
+    markAfterPaint('document-opened');
+    frames.shift()!(0);
+    expect(mark).not.toHaveBeenCalled(); // the first frame may not be painted yet
+    frames.shift()!(0);
+    expect(mark).toHaveBeenCalledWith('document-opened');
+    raf.mockRestore();
   });
 });

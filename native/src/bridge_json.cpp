@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdio>
+#include <format>
 
 namespace pagelite::bridge {
 
@@ -59,6 +60,11 @@ std::string document(std::string_view path, std::string_view name, std::string_v
 
 std::string error(std::string_view code, std::string_view message) {
   return R"({"code":)" + quote(code) + R"(,"message":)" + quote(message) + "}";
+}
+
+std::string startup_mark(std::string_view phase, double since_main_ms, std::int64_t unix_ms) {
+  return std::format(R"({{"phase":{},"sinceMainMs":{:.1f},"unixMs":{}}})", quote(phase),
+                     since_main_ms, unix_ms);
 }
 
 } // namespace pagelite::bridge

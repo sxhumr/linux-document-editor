@@ -2,7 +2,6 @@
   "name": "pagelite-engine-eval",
   "description": "Milestone 1 DOCX engine round-trip proof of concept for PageLite",
   "scripts": {
-    "fixtures": "node scripts/make-fixtures.mjs && ./scripts/make-libreoffice-fixtures.sh",
     "eval": "node --no-warnings run.mjs && node report.mjs"
   },
   "type": "module",

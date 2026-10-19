@@ -12,7 +12,9 @@
 #include <webkit2/webkit2.h>
 #include <webview/webview.h>
 
+#include <chrono>
 #include <filesystem>
+#include <iostream>
 #include <memory>
 #include <span>
 #include <string>
@@ -183,6 +185,28 @@ struct Shell::Impl {
       return std::string("null");
     });
     bind_documents();
+    if (options.measure_since) {
+      bind_startup_marks();
+    }
+  }
+
+  /// Timing mode: print each startup phase the UI reports, and quit after the last one
+  /// (the opened document if one was named on the command line, otherwise the empty editor).
+  void bind_startup_marks() {
+    const std::string last_phase = options.initial_path ? "document-opened" : "ui-ready";
+    view->bind("pagelite_mark", [this, last_phase](const std::string &request) {
+      const std::string phase = arg(request);
+      const std::chrono::duration<double, std::milli> since_main =
+          std::chrono::steady_clock::now() - *options.measure_since;
+      const auto unix_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                               std::chrono::system_clock::now().time_since_epoch())
+                               .count();
+      std::cerr << bridge::startup_mark(phase, since_main.count(), unix_ms) << '\n';
+      if (phase == last_phase) {
+        view->terminate();
+      }
+      return std::string("null");
+    });
   }
 
   // ---- documents --------------------------------------------------------------------

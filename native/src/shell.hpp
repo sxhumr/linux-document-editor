@@ -4,6 +4,7 @@
 // It serves the embedded UI over the private pagelite:// scheme, refuses every other
 // navigation, and routes window-close through the UI so unsaved edits are never dropped.
 
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -17,6 +18,9 @@ struct ShellOptions {
   std::optional<std::string> dev_server_url;
   /// A document given on the command line, opened once the UI asks for it.
   std::optional<std::filesystem::path> initial_path;
+  /// Startup timing mode (PAGELITE_MEASURE=1): when main() started. The shell then prints
+  /// one JSON line per startup phase to stderr and quits after the last one.
+  std::optional<std::chrono::steady_clock::time_point> measure_since;
 };
 
 class Shell {

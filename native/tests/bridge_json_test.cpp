@@ -6,6 +6,7 @@ using pagelite::bridge::document;
 using pagelite::bridge::error;
 using pagelite::bridge::file_ref;
 using pagelite::bridge::quote;
+using pagelite::bridge::startup_mark;
 
 TEST_CASE("plain text is quoted unchanged") {
   CHECK(quote("report.docx") == R"("report.docx")");
@@ -33,4 +34,10 @@ TEST_CASE("reply shapes") {
   CHECK(document("/a/b.docx", "b.docx", "UEs=") ==
         R"({"path":"/a/b.docx","name":"b.docx","data":"UEs="})");
   CHECK(error("not-found", "gone") == R"({"code":"not-found","message":"gone"})");
+}
+
+TEST_CASE("startup timing lines") {
+  CHECK(startup_mark("ui-ready", 812.345, 1760864400123) ==
+        R"({"phase":"ui-ready","sinceMainMs":812.3,"unixMs":1760864400123})");
+  CHECK(startup_mark(R"(x"y)", 0, 0) == R"({"phase":"x\"y","sinceMainMs":0.0,"unixMs":0})");
 }

@@ -32,6 +32,9 @@ export class NativeError extends Error {
 
 type WireDocument = FileRef & { data: string };
 
+/** Startup milestones reported to the shell's timing mode (scripts/measure.sh). */
+export type StartupPhase = 'ui-ready' | 'document-opened';
+
 interface NativeBindings {
   pagelite_appInfo?: () => Promise<AppInfo>;
   pagelite_openDocument?: () => Promise<WireDocument | null>;
@@ -41,6 +44,8 @@ interface NativeBindings {
   pagelite_setTitle?: (title: string) => Promise<null>;
   pagelite_registerCloseHandler?: () => Promise<null>;
   pagelite_confirmClose?: () => Promise<null>;
+  /** Bound only when the shell runs with PAGELITE_MEASURE=1. */
+  pagelite_mark?: (phase: StartupPhase) => Promise<null>;
   __pagelite_requestClose?: () => void;
 }
 
@@ -124,4 +129,14 @@ export async function writeDocument(path: string, bytes: Uint8Array): Promise<vo
 /** Closes the window immediately. Callers must have resolved unsaved changes first. */
 export async function closeWindow(): Promise<void> {
   await native().pagelite_confirmClose?.();
+}
+
+/**
+ * Reports a startup milestone once the frame showing it has been painted (the second
+ * animation frame after this call). Does nothing unless the shell is measuring startup.
+ */
+export function markAfterPaint(phase: StartupPhase): void {
+  const mark = native().pagelite_mark;
+  if (!mark) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => void mark(phase)));
 }

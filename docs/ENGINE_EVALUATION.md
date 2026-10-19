@@ -35,6 +35,7 @@ These come from `plan.md`:
 ### @docx-editor.dev/core (EigenPal): recommended
 
 - **Model.** It reads the DOCX into a canonical OOXML tree, applies edits to that tree, and writes it back out. Only the parts it models are rewritten; media, fonts, macros and unknown parts are copied byte for byte. This is documented in its README ("Fidelity") and in the `writeOoxmlPackage` doc comment.
+  - **Correction (Milestone 6, 2026-10-19).** Non-XML parts are copied byte for byte, but *every* XML part, edited or not, is re-serialized in a normalized form: the XML declaration is dropped, namespaces are reordered, redundant `xml:space` is removed, and paragraph id stamps are added. The content of unedited parts was identical in every corpus document, so nothing is lost, but the bytes are not. See [COMPATIBILITY.md](COMPATIBILITY.md).
 - **Licence.** Apache-2.0. Its direct runtime dependencies are MIT or Apache-2.0: `prosemirror-*`, `fflate`, `fast-xml-parser`, `harfbuzzjs`, `bidi-js`, `utif2`, `emf-converter`. These were checked in `node_modules`.
 - **Paid tier.** These packages use the "EigenPal Pro" licence: `@docx-editor.dev/pro` (comments and tracked changes), `@docx-editor.dev/editor-api` (Office.js-style automation), `docx-to-pdf` and `telemetry`. **PageLite must not depend on them.** The PoC uses only the Apache-2.0 core (`@docx-editor.dev/core/store`).
 - **Network.** None. The only `fetch` in the bundle is the Emscripten loader for the bundled `harfbuzz.wasm`, a local, same-origin file. The harness recorded 0 network attempts.

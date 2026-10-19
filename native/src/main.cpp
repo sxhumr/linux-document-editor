@@ -2,18 +2,24 @@
 
 #include <gtk/gtk.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <iostream>
 
 int main(int argc, char **argv) {
+  const auto started = std::chrono::steady_clock::now();
   if (gtk_init_check(&argc, &argv) == FALSE) {
     std::cerr << "PageLite needs a graphical session (GTK could not initialise).\n";
     return EXIT_FAILURE;
   }
 
   pagelite::ShellOptions options;
+  if (const char *measure = std::getenv("PAGELITE_MEASURE");
+      measure != nullptr && *measure == '1') {
+    options.measure_since = started; // see scripts/measure.sh
+  }
   if (argc > 1) {
     std::error_code ec;
     const auto path = std::filesystem::absolute(argv[1], ec);

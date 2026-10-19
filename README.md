@@ -2,9 +2,9 @@
 
 A lightweight Linux desktop editor for Microsoft Word `.docx` files: a small C++ GTK shell around an established DOCX engine, with a minimal interface.
 
-> **Status: Milestone 5 of 8.**
-> - **Done:** New, Open, Save and Save As with crash-safe saving and unsaved-change protection. File, Edit, Format and Help menus. A formatting toolbar with styles, headings, font, size, bold, italic, underline, alignment, lists and indent. Find, and keyboard shortcuts throughout.
-> - **Not yet:** compatibility hardening and Linux packaging (Milestones 6–7).
+> **Status: Milestone 6 of 8.**
+> - **Done:** New, Open, Save and Save As with crash-safe saving and unsaved-change protection. File, Edit, Format and Help menus. A formatting toolbar with styles, headings, font, size, bold, italic, underline, alignment, lists and indent. Find, and keyboard shortcuts throughout. A DOCX compatibility suite of 35 documents that runs in CI ([what is kept](docs/COMPATIBILITY.md)).
+> - **Not yet:** Linux packaging (Milestone 7).
 >
 > See [`plan.md`](plan.md) for the roadmap.
 
@@ -14,7 +14,7 @@ A lightweight Linux desktop editor for Microsoft Word `.docx` files: a small C++
 - **Built-in UI.** The interface is built at compile time, linked into the binary, and served from memory over a private `pagelite://` scheme, so there is no local server and no network access.
 - **UI and engine (React + TypeScript).** The UI drives [`@docx-editor.dev/core`](https://github.com/eigenpal/docx-editor) (Apache-2.0). The engine edits the document's own XML directly, so content it doesn't understand survives a save.
 
-Design decisions are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and the engine choice, backed by round-trip tests, is in [`docs/ENGINE_EVALUATION.md`](docs/ENGINE_EVALUATION.md).
+Design decisions are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and the engine choice, backed by round-trip tests, is in [`docs/ENGINE_EVALUATION.md`](docs/ENGINE_EVALUATION.md). What survives a save is in [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md), and how it is all tested is in [`docs/TESTING.md`](docs/TESTING.md).
 
 ## Build and run
 
@@ -59,18 +59,25 @@ PAGELITE_DEV_SERVER=http://localhost:5173 ./build/debug/native/pagelite
 | What | Command |
 | --- | --- |
 | C++ unit tests (Catch2) | `ctest --preset debug` |
-| UI unit tests (Vitest) | `cd ui && npm test` |
+| UI unit tests and DOCX compatibility suite (Vitest) | `cd ui && npm test` |
+| Compatibility suite plus LibreOffice cross-check | `cd ui && npm run test:compat` |
 | UI lint, formatting, types | `cd ui && npm run lint && npm run format:check && npm run typecheck` |
 | C++ formatting, static analysis | `clang-format --dry-run --Werror native/src/* native/tests/*` and `clang-tidy -p build/debug native/src/*.cpp` |
-| DOCX round-trip corpus | `cd poc/engine-eval && npm ci && npm run eval` |
+| Regenerate the fixture corpus | `cd ui && npm run fixtures` |
+| Startup and file-open timing | `scripts/measure.sh` (release build, graphical session) |
 
-CI runs all of these except the corpus; see `.github/workflows/ci.yml`.
+CI runs everything except the LibreOffice cross-check, clang-tidy and the timing script; see `.github/workflows/ci.yml`. Details are in [`docs/TESTING.md`](docs/TESTING.md).
 
-## Measurements so far
+## Measurements
 
-- **Binary size.** The release binary is 5.1 MB, almost all of it the embedded UI and editor engine. GTK and WebKitGTK are system libraries and aren't counted.
-- **Round trip checked by hand (2026-10-15).** A fixture was opened, edited and saved in the app, then compared with `poc/engine-eval/lib/inspect.mjs`. The edits persisted, and the untouched fonts, sizes, colours, bold, italic, lists, sections and headers were unchanged.
-- **Not yet measured.** Startup and file-open times will be measured with a repeatable procedure in Milestone 6.
+- **Compatibility.** All 31 well-formed corpus documents keep every checked feature after an edit and save, including lists, tables, images, sections, headers, links, footnotes, comments, tracked changes, fields and right-to-left text. Parts that weren't edited keep the same content. One formatting difference is known: text typed after a link takes on the link's style. See [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md).
+- **Startup (warm, 2026-10-19, i7-8565U).** Medians from launch to the painted frame:
+  - empty editor: 0.94 s;
+  - 10 KB document: 1.50 s;
+  - 2,000-paragraph document: 2.76 s.
+
+  Results vary by up to about 30% between sessions; cold starts are not measured yet. See [`docs/TESTING.md`](docs/TESTING.md#performance).
+- **Binary size.** The release binary is 5.0 MB, almost all of it the embedded UI and editor engine. GTK and WebKitGTK are system libraries and aren't counted.
 
 ## Licence
 

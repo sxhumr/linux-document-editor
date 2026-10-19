@@ -5,6 +5,7 @@ import {
   appInfo,
   chooseSavePath,
   closeWindow,
+  markAfterPaint,
   onCloseRequested,
   openDocument,
   setWindowTitle,
@@ -235,9 +236,12 @@ export function App() {
 
   const onReady = (ready: Editor) => {
     attachEditor(ready);
+    markAfterPaint('ui-ready');
     // A document named on the command line opens as soon as the editor exists.
     takeInitialDocument().then(
-      (opened) => opened && controller.openInitial(opened),
+      async (opened) => {
+        if (opened && (await controller.openInitial(opened))) markAfterPaint('document-opened');
+      },
       (error: unknown) =>
         controller.notify({
           kind: 'error',

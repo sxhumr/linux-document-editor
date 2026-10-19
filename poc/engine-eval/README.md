@@ -1,17 +1,16 @@
 # Engine evaluation PoC (Milestone 1)
 
-DOCX round-trip harness behind [`docs/ENGINE_EVALUATION.md`](../../docs/ENGINE_EVALUATION.md). Throwaway by design: it informs the engine choice and seeds `tests/compatibility/`, but it is not app code.
+DOCX round-trip harness behind [`docs/ENGINE_EVALUATION.md`](../../docs/ENGINE_EVALUATION.md). Kept as the record of the Milestone 1 engine comparison and no longer developed.
+
+> **Superseded (Milestone 6).** The permanent compatibility suite is [`ui/tests/compatibility/`](../../ui/tests/compatibility/). It runs in CI against the engine version the app ships. The fixture generators moved there too (`cd ui && npm run fixtures`), and the corpus has since grown, so a re-run here covers more fixtures than `results/` shows.
 
 ```bash
 npm ci
-npm run fixtures   # fixtures/docx/ (+ fixtures/docx/libreoffice/, needs LibreOffice)
 npm run eval       # round trips → results/results.json + results/SUMMARY.md
 ```
 
 | Path | Purpose |
 | --- | --- |
-| `scripts/make-fixtures.mjs` | Synthetic corpus, built with `docx` (no private documents) |
-| `scripts/make-libreoffice-fixtures.sh` | Same fixtures re-saved by a second producer |
 | `adapters/*.mjs` | One file per engine: `open`, `appendToParagraph`, `save`, `paragraphCount` |
 | `lib/inspect.mjs` | Engine-independent OOXML feature extraction and comparison |
 | `run.mjs` | Harness: offline guard, round trips, reopen, LibreOffice check, timings |

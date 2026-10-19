@@ -18,6 +18,7 @@ describe('validateDocx', () => {
     ['malformed-not-a-zip', 'damaged or not a Word document'],
     ['malformed-truncated', 'damaged or not a Word document'],
     ['malformed-missing-document', 'has no document body'],
+    ['malformed-zip-bomb', 'too large to open safely'],
   ])('rejects %s with a readable reason', (name, why) => {
     const result = validateDocx(fixture(name));
     expect(result.ok).toBe(false);
