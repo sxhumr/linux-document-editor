@@ -8,6 +8,7 @@
 | UI unit tests (Vitest, jsdom) | Document lifecycle (`DocumentController`), unsaved-change protection, validation, bridge, shortcut and command tables, menu bar, find bar, dialogs | `cd ui && npm test` | Yes |
 | DOCX compatibility suite (Vitest, Node) | Round trips of the whole fixture corpus through the engine; see below | `cd ui && npm test` (runs with the unit tests) | Yes |
 | LibreOffice cross-check | Every saved file opens in LibreOffice and shows the edit | `cd ui && npm run test:compat` | No (needs LibreOffice) |
+| Package install test (Docker) | The `.deb` installs on a clean Ubuntu 24.04, every library resolves, the desktop entry and metadata validate, `.docx` is registered, the installed app opens a document, and removal leaves nothing behind | `packaging/test-deb.sh` | Yes |
 | Static checks | oxlint, Prettier, TypeScript; clang-format, clang-tidy | see the README | Yes, except clang-tidy |
 | Manual checklist | Things only a person at the window can judge | [below](#manual-checklist) | No |
 
@@ -95,6 +96,20 @@ Measured 2026-10-19 with a release build of `526982a` plus the Milestone 6 chang
 
 **Headless engine cost** (from the compatibility suite, no rendering): about 3.4 ms per single-paragraph edit in the 2,000-paragraph document, and about 0.8 s to open and save it.
 
+## Package
+
+`packaging/test-deb.sh` runs these steps in a fresh `ubuntu:24.04` container:
+
+1. **Install** with `apt-get install ./pagelite_*.deb`, so apt has to resolve every dependency from the archive.
+2. **Libraries.** `ldd` must find all of them.
+3. **Metadata.** `desktop-file-validate` and `appstreamcli validate` must pass, and the `.docx` MIME type must appear in the desktop MIME cache.
+4. **Launch** the installed `/usr/bin/pagelite` under `xvfb-run` with a fixture, in timing mode. It must report `document-opened`. WebKit's bubblewrap sandbox cannot start in a container, so the test sets `WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1`, inside the container only.
+5. **Remove** the package. The binary, desktop entry, icon, docs and MIME registration must all be gone.
+
+Result on 2026-10-19: passed. Docker pulled `ubuntu:24.04` (sha256:68ee2200…), apt installed the package and its dependencies, and all 129 libraries resolved. The app reported `document-opened` 2.2 s after `main()` on the virtual display.
+
+What the container cannot show, a person checks after installing on a real desktop (checklist item 6).
+
 ## Manual checklist
 
 Run before a release, with `./build/release/native/pagelite`:
@@ -104,3 +119,9 @@ Run before a release, with `./build/release/native/pagelite`:
 3. **Refused files.** Open each `fixtures/docx/malformed-*.docx`. A readable error must appear, and the open document must stay as it was.
 4. **Save failures.** Save into a read-only folder. An error must appear, the document must stay marked modified, and the edits must stay.
 5. **Unsaved changes.** Edit, then press Ctrl+Q, Ctrl+N and Ctrl+O, and click the window's ×. Each must offer Save, Discard and Cancel.
+6. **Installed package on the desktop.** After `sudo apt install ./pagelite_*.deb`:
+   - PageLite appears in the app grid with its icon.
+   - Its running window shows the PageLite icon and name in the dock, not a generic one.
+   - Right-clicking a `.docx` in the file manager offers **Open With → PageLite**, and that opens the file.
+   - Help → About shows the licence.
+   - `sudo apt remove pagelite` removes it from the app grid.

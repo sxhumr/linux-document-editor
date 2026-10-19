@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PageLite
+GenericName=Word Processor
+Comment=Edit Word documents in a fast, uncluttered window
+Exec=pagelite %f
+Icon=io.github.sxhumr.PageLite
+Terminal=false
+Categories=Office;WordProcessor;
+MimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document;
+Keywords=docx;word;document;editor;
+StartupNotify=true
+StartupWMClass=io.github.sxhumr.PageLite

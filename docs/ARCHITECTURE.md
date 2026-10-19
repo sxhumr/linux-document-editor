@@ -151,6 +151,16 @@ These rules guard every action that would lose work:
   - **Accepted differences.** These are listed with reasons in `known-losses.ts`. A listed loss that stops happening fails the suite.
 - **Consequences.** Upgrading the engine is a test run, not a manual review. The browser editor's own `save()` path is not exercised headlessly; the manual checklist in [TESTING.md](TESTING.md) covers it.
 
+### ADR-10: Ship a .deb that uses the system's GTK and WebKitGTK (2026-10-19)
+
+- **Problem.** PageLite needs an installable Linux package. It links GTK 3 and WebKitGTK 4.1, and WebKitGTK is large (around 100 MB with GStreamer), needs frequent security fixes, and starts helper processes from fixed paths.
+- **Decision.** One `.deb`, built by CPack from the CMake install rules (`packaging/CMakeLists.txt`), for Ubuntu 24.04 and later.
+  - **Dependencies.** The package does not bundle GTK or WebKitGTK; `dpkg-shlibdeps` derives the `Depends` line from the binary, so the distro supplies those libraries and keeps them patched. The package is 1.6 MB.
+  - **Integration.** A desktop entry with the `.docx` MIME type, a scalable hicolor icon and AppStream metadata, all named after the app id `io.github.sxhumr.PageLite`. The shell sets that id as the GTK program name, so the desktop matches the window to its entry. The system's own dpkg triggers refresh the desktop, icon and MIME caches, so there are no maintainer scripts.
+  - **Licences.** `/usr/share/doc/pagelite/` holds a machine-readable `copyright` (Apache-2.0) and a generated `THIRD_PARTY_NOTICES.md` covering every component embedded in the binary.
+- **Rejected: AppImage.** It would have to bundle WebKitGTK with its helper processes and GStreamer, making a much larger file that is fragile across distributions and gets no security updates.
+- **Consequences.** Users of other distributions build from source. The `Depends` line names Ubuntu 24.04's `t64` libraries, so the package does not install on Ubuntu 22.04. Every CI run installs, launches and removes the package on a clean Ubuntu 24.04 container (`packaging/test-deb.sh`).
+
 ## Repository layout
 
 | Path | Contents |
@@ -167,9 +177,11 @@ These rules guard every action that would lose work:
 | `ui/tests/compatibility/` | DOCX compatibility suite and fixture generators (ADR-9) |
 | `fixtures/docx/` | Generated synthetic corpus; `libreoffice/` holds the same documents re-saved by LibreOffice |
 | `scripts/measure.sh` | Startup and file-open timing (see TESTING.md) |
+| `packaging/` | Install rules and CPack `.deb` (ADR-10), desktop entry, icon, AppStream metadata, Debian `copyright`, notices generator, clean-container install test |
+| `LICENSE` | Apache License 2.0 |
 | `poc/engine-eval/` | Milestone 1 engine comparison behind `docs/ENGINE_EVALUATION.md` (kept as a record) |
 
-## Known limitations (Milestone 6)
+## Known limitations (Milestone 7)
 
 DOCX-specific limitations and evidence are in [COMPATIBILITY.md](COMPATIBILITY.md).
 
@@ -182,6 +194,11 @@ DOCX-specific limitations and evidence are in [COMPATIBILITY.md](COMPATIBILITY.m
 - **Every XML part is rewritten on save.** The content is unchanged, but the bytes differ (no XML declaration, reordered namespaces). File-level diffs and some document-management tools will report every part as modified.
 - **Typing after a link** at the end of a paragraph gives the new text the link's style, though not the link itself (seen headlessly; see COMPATIBILITY.md).
 - **Not checked in Microsoft Word.** Saved files are verified structurally and in LibreOffice only.
+- **Packaging.**
+  - Only a `.deb` for Ubuntu 24.04 and later; it won't install on 22.04 or other distributions.
+  - Built and tested on amd64 only.
+  - Not in an apt repository and not signed, so there are no automatic updates.
+  - No man page or Debian changelog, and lintian has not been run.
 - **Startup timing mode.** `PAGELITE_MEASURE=1` makes the shell print timings and quit once startup is done. It is meant for `scripts/measure.sh`; the binding does not exist otherwise.
 
 ## Build
@@ -194,4 +211,5 @@ ctest --preset debug
 ./build/debug/native/pagelite
 ```
 
+- **Package:** `cmake --preset package && cmake --build --preset package && cpack --preset deb`, then `packaging/test-deb.sh` (ADR-10).
 - **UI hot reload:** run `npm run dev` in `ui/`, then `PAGELITE_DEV_SERVER=http://localhost:5173 ./build/debug/native/pagelite`. This works in Debug builds only.

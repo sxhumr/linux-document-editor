@@ -38,3 +38,4 @@ if(PAGELITE_BUILD_TESTS)
 endif()
 
 add_subdirectory(native)
+add_subdirectory(packaging)

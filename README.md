@@ -2,9 +2,9 @@
 
 A lightweight Linux desktop editor for Microsoft Word `.docx` files: a small C++ GTK shell around an established DOCX engine, with a minimal interface.
 
-> **Status: Milestone 6 of 8.**
-> - **Done:** New, Open, Save and Save As with crash-safe saving and unsaved-change protection. File, Edit, Format and Help menus. A formatting toolbar with styles, headings, font, size, bold, italic, underline, alignment, lists and indent. Find, and keyboard shortcuts throughout. A DOCX compatibility suite of 35 documents that runs in CI ([what is kept](docs/COMPATIBILITY.md)).
-> - **Not yet:** Linux packaging (Milestone 7).
+> **Status: Milestone 7 of 8.**
+> - **Done:** New, Open, Save and Save As with crash-safe saving and unsaved-change protection. File, Edit, Format and Help menus. A formatting toolbar with styles, headings, font, size, bold, italic, underline, alignment, lists and indent. Find, and keyboard shortcuts throughout. A DOCX compatibility suite of 35 documents that runs in CI ([what is kept](docs/COMPATIBILITY.md)). A `.deb` package with a desktop entry, icon and `.docx` file association, install-tested on a clean Ubuntu 24.04 in CI.
+> - **Not yet:** the portfolio release (Milestone 8).
 >
 > See [`plan.md`](plan.md) for the roadmap.
 
@@ -15,6 +15,24 @@ A lightweight Linux desktop editor for Microsoft Word `.docx` files: a small C++
 - **UI and engine (React + TypeScript).** The UI drives [`@docx-editor.dev/core`](https://github.com/eigenpal/docx-editor) (Apache-2.0). The engine edits the document's own XML directly, so content it doesn't understand survives a save.
 
 Design decisions are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and the engine choice, backed by round-trip tests, is in [`docs/ENGINE_EVALUATION.md`](docs/ENGINE_EVALUATION.md). What survives a save is in [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md), and how it is all tested is in [`docs/TESTING.md`](docs/TESTING.md).
+
+## Install
+
+PageLite is packaged for Ubuntu 24.04 and later (amd64). Build the package (see below), or download `pagelite-deb` from a CI run, then:
+
+```bash
+sudo apt install /path/to/pagelite_0.1.0_amd64.deb   # pulls in GTK 3 and WebKitGTK 4.1 if needed
+```
+
+Give apt a path that contains a `/` (absolute, or `./` from the package's folder); with a bare file name it looks for a package in the archive instead.
+
+PageLite then appears in the app grid under Office, and in the file manager under **Open With** for `.docx` files. To make it the default for Word documents:
+
+```bash
+xdg-mime default io.github.sxhumr.PageLite.desktop application/vnd.openxmlformats-officedocument.wordprocessingml.document
+```
+
+Remove it with `sudo apt remove pagelite`.
 
 ## Build and run
 
@@ -47,6 +65,13 @@ Common shortcuts follow Word and LibreOffice:
 
 To get a release build, use `cmake --preset release && cmake --build --preset release`.
 
+To build the Debian package and test it on a clean Ubuntu 24.04 container (needs Docker):
+
+```bash
+cmake --preset package && cmake --build --preset package && cpack --preset deb
+packaging/test-deb.sh        # install, run, remove: build/package/dist/pagelite_0.1.0_amd64.deb
+```
+
 **UI hot reload (Debug builds only):**
 
 ```bash
@@ -65,6 +90,7 @@ PAGELITE_DEV_SERVER=http://localhost:5173 ./build/debug/native/pagelite
 | C++ formatting, static analysis | `clang-format --dry-run --Werror native/src/* native/tests/*` and `clang-tidy -p build/debug native/src/*.cpp` |
 | Regenerate the fixture corpus | `cd ui && npm run fixtures` |
 | Startup and file-open timing | `scripts/measure.sh` (release build, graphical session) |
+| Package install test on clean Ubuntu 24.04 | `packaging/test-deb.sh` (Docker) |
 
 CI runs everything except the LibreOffice cross-check, clang-tidy and the timing script; see `.github/workflows/ci.yml`. Details are in [`docs/TESTING.md`](docs/TESTING.md).
 
@@ -81,4 +107,6 @@ CI runs everything except the LibreOffice cross-check, clang-tidy and the timing
 
 ## Licence
 
-Not chosen yet.
+PageLite is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Sohum Ramouthar.
+
+The binary embeds third-party code under MIT, Apache-2.0, 0BSD and Zlib licences. The build collects every component and its licence text into `THIRD_PARTY_NOTICES.md`, installed in `/usr/share/doc/pagelite/` (`packaging/third-party-notices.mjs`). The build fails if a dependency's licence is not on the allowlist.

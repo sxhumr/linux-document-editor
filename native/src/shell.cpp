@@ -311,7 +311,7 @@ struct Shell::Impl {
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "PageLite");
     gtk_window_set_default_size(GTK_WINDOW(window), kDefaultWidth, kDefaultHeight);
-    gtk_window_set_icon_name(GTK_WINDOW(window), "pagelite");
+    gtk_window_set_icon_name(GTK_WINDOW(window), kAppId);
     g_signal_connect(window, "delete-event", G_CALLBACK(&Impl::on_delete_event), this);
 
     view = std::make_unique<webview::webview>(options.debug, window);

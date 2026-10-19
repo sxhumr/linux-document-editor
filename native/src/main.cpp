@@ -10,6 +10,10 @@
 
 int main(int argc, char **argv) {
   const auto started = std::chrono::steady_clock::now();
+  // Before GTK starts: becomes the Wayland app id and X11 WM class, so the desktop matches
+  // the window to the installed .desktop file (its name, icon and dock entry).
+  g_set_prgname(pagelite::kAppId);
+  g_set_application_name("PageLite");
   if (gtk_init_check(&argc, &argv) == FALSE) {
     std::cerr << "PageLite needs a graphical session (GTK could not initialise).\n";
     return EXIT_FAILURE;

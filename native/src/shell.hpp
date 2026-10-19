@@ -12,6 +12,10 @@
 
 namespace pagelite {
 
+/// Reverse-DNS application id: the Wayland app id / X11 WM class, the icon name, and the
+/// base name of the installed .desktop and .metainfo.xml files (packaging/).
+inline constexpr const char *kAppId = "io.github.sxhumr.PageLite";
+
 struct ShellOptions {
   bool debug = false;
   /// Debug builds only: load the UI from a Vite dev server instead of the embedded copy.
