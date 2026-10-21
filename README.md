@@ -9,7 +9,7 @@ A fast, uncluttered Linux desktop editor for Microsoft Word `.docx` files. It's 
 ## Features
 
 - **Edits real Word documents.** It opens, edits and saves `.docx` files. Content it doesn't edit (comments, tracked changes, footnotes, fields, images, sections) comes out with the same content. The XML is re-serialized, so the bytes differ. [Evidence](docs/COMPATIBILITY.md).
-- **Essential formatting.** Paragraph styles and headings, font and size, bold, italic, underline, alignment, bulleted and numbered lists, indent, and clear formatting.
+- **Essential formatting.** Paragraph styles and headings, font and size, bold, italic, underline, strikethrough, alignment, bulleted and numbered lists, indent, and clear formatting.
 - **Keyboard first.** Word and LibreOffice shortcuts, menus you can open and navigate from the keyboard, and incremental Find. Press F1 to see every shortcut.
 - **Safe with your work.**
   - Saves are atomic: if a save stops partway, for example because the disk is full or the app crashes, the original file stays complete.
@@ -48,14 +48,14 @@ Open a file from the app grid, from the file manager, or with `pagelite report.d
 
 | Shortcut | Action |
 | --- | --- |
-| Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S | New / Open / Save / Save As |
+| Ctrl+N / Ctrl+O / Ctrl+S / Ctrl+Shift+S / Ctrl+Q | New / Open / Save / Save As / Quit |
 | Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) | Undo / Redo |
 | Ctrl+B / Ctrl+I / Ctrl+U | Bold / Italic / Underline |
 | Ctrl+L / Ctrl+E / Ctrl+R / Ctrl+J | Align left / Center / Align right / Justify |
 | Ctrl+Alt+0 … Ctrl+Alt+3 | Normal text, Heading 1–3 |
 | Ctrl+Shift+L | Bulleted list |
 | Ctrl+Space | Clear formatting |
-| Ctrl+F, then F3 / Shift+F3 | Find, next / previous match |
+| Ctrl+F, then F3 / Shift+F3 (or Ctrl+G / Ctrl+Shift+G) | Find, next / previous match |
 | Alt+F / Alt+E / Alt+O / Alt+H | Open the File / Edit / Format / Help menu |
 | F1 or Ctrl+/ | Every shortcut |
 

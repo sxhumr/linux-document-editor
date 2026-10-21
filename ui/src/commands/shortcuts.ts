@@ -127,10 +127,10 @@ export function commandForKey(
   return null;
 }
 
-const KEY_LABELS: Record<string, string> = { ' ': 'Space', '/': '/' };
+const KEY_LABELS: Record<string, string> = { ' ': 'Space' };
 
 export function formatShortcut(s: Shortcut): string {
-  const key = KEY_LABELS[s.key] ?? (s.key.length === 1 ? s.key.toUpperCase() : s.key.toUpperCase());
+  const key = KEY_LABELS[s.key] ?? s.key.toUpperCase();
   return [s.ctrl && 'Ctrl', s.alt && 'Alt', s.shift && 'Shift', key].filter(Boolean).join('+');
 }
 

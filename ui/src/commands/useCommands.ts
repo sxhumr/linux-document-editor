@@ -38,7 +38,7 @@ export function useCommands(controller: DocumentController, actions: AppActions)
   const editor = useDocxEditor();
   const style = useParagraphStyle();
 
-  const engine: Record<string, EngineCommand> = {
+  const engine = {
     undo: useEditorCommand('history.undo'),
     redo: useEditorCommand('history.redo'),
     cut: useEditorCommand(CUT),

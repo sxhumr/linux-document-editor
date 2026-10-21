@@ -18,7 +18,7 @@ What PageLite keeps, changes and refuses when it opens, edits and saves a `.docx
 
 ## Results
 
-All 31 documents keep every feature after the standard edit. Opening and saving with no edit changes nothing. One formatting difference shows up under the stress edit (see [Differences](#differences)).
+All 31 documents keep every feature after the standard edit (30 are edited; `empty-document` has nothing to edit). Opening and saving with no edit changes nothing. One formatting difference shows up under the stress edit (see [Differences](#differences)).
 
 | Feature | Fixtures | Result |
 | --- | --- | --- |

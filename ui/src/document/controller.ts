@@ -7,7 +7,7 @@
 //    revision that was actually written (edits made during a save stay unsaved).
 //  - Nothing replaces or closes a modified document without Save / Discard / Cancel.
 //  - A failed save changes nothing: the editor keeps every edit and stays modified.
-import type { FileRef, OpenedDocument } from '../native/bridge';
+import { NativeError, type FileRef, type OpenedDocument } from '../native/bridge';
 import { suggestedSaveName, UNTITLED, type DocumentInfo } from './session';
 import type { Validation } from './validate';
 
@@ -42,7 +42,22 @@ export interface DocumentState {
   notice: Notice | null;
 }
 
-const describe = (error: unknown) => (error instanceof Error ? error.message : String(error));
+// What the shell's stable error codes (ARCHITECTURE ADR-6) mean to the user. Codes not
+// listed here ("exists", "not-granted", "io-error") already carry a user-facing message.
+const NATIVE_MESSAGES: Record<string, string> = {
+  'not-found': 'The file no longer exists.',
+  'permission-denied': "PageLite doesn't have permission to access it.",
+  'is-directory': 'That is a folder, not a file.',
+  'too-large': 'The file is too large to open.',
+  'no-space': 'The disk is full.',
+  'read-only-filesystem': 'The disk is read-only.',
+  'directory-missing': 'The folder no longer exists.',
+};
+
+const describe = (error: unknown) => {
+  if (error instanceof NativeError) return NATIVE_MESSAGES[error.code] ?? error.message;
+  return error instanceof Error ? error.message : String(error);
+};
 
 export class DocumentController {
   private info: DocumentInfo = UNTITLED;
@@ -113,25 +128,13 @@ export class DocumentController {
   newDocument = () =>
     this.exclusive(async () => {
       if (!(await this.confirmDiscard())) return false;
-      this.replace('blank', UNTITLED);
-      return true;
+      return this.replace('blank', UNTITLED);
     }, false);
 
-  open = () =>
-    this.exclusive(async () => {
-      let opened: OpenedDocument | null;
-      try {
-        opened = await this.deps.files.openDocument();
-      } catch (error) {
-        this.setNotice({ kind: 'error', text: `Couldn't open the file: ${describe(error)}` });
-        return false;
-      }
-      if (!opened) return false;
-      return this.show(opened);
-    }, false);
+  open = () => this.openFrom(() => this.deps.files.openDocument());
 
-  /** Opens a document handed over at startup (command line). */
-  openInitial = (opened: OpenedDocument) => this.exclusive(() => this.show(opened), false);
+  /** Opens the document handed over at startup (command line), if there is one. */
+  openInitial = (take: () => Promise<OpenedDocument | null>) => this.openFrom(take);
 
   save = () => this.exclusive(() => this.saveNow(), false);
 
@@ -142,6 +145,20 @@ export class DocumentController {
 
   // ---- internals --------------------------------------------------------------------
 
+  private openFrom(source: () => Promise<OpenedDocument | null>) {
+    return this.exclusive(async () => {
+      let opened: OpenedDocument | null;
+      try {
+        opened = await source();
+      } catch (error) {
+        this.setNotice({ kind: 'error', text: `Couldn't open the file: ${describe(error)}` });
+        return false;
+      }
+      if (!opened) return false;
+      return this.show(opened);
+    }, false);
+  }
+
   /** Validates, asks about unsaved changes, then replaces the document. */
   private async show(opened: OpenedDocument): Promise<boolean> {
     const validation = this.deps.validate(opened.bytes);
@@ -150,17 +167,23 @@ export class DocumentController {
       return false;
     }
     if (!(await this.confirmDiscard())) return false;
-    this.replace(opened.bytes, { name: opened.name, path: opened.path });
-    return true;
+    return this.replace(opened.bytes, { name: opened.name, path: opened.path });
   }
 
-  private replace(source: Uint8Array | 'blank', info: DocumentInfo) {
-    this.deps.editor.load(source);
+  /** Loads into the editor and adopts `info`; if the editor refuses, nothing changes. */
+  private replace(source: Uint8Array | 'blank', info: DocumentInfo): boolean {
+    try {
+      this.deps.editor.load(source);
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Couldn't open ${info.name}: ${describe(error)}` });
+      return false;
+    }
     // The engine reports the load through noteChange; this also covers engines that don't.
     this.revision = this.savedRevision = this.deps.editor.revision();
     this.info = info;
     this.notice = null;
     this.emit();
+    return true;
   }
 
   /** True if it is safe to drop the current document. */

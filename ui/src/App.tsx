@@ -89,7 +89,12 @@ function createController(setPrompt: (prompt: Prompt | null) => void) {
   const editor: { current: Editor | null } = { current: null };
   const controller = new DocumentController({
     editor: {
-      load: (source) => editor.current?.load(source),
+      load: (source) => {
+        // Before onReady there is no editor; adopting the file anyway would let a later
+        // Save write the blank page over it.
+        if (!editor.current) throw new Error('The editor is not ready yet.');
+        editor.current.load(source);
+      },
       save: async () => {
         if (!editor.current) throw new Error('The editor is not ready yet.');
         return new Uint8Array(await editor.current.save());
@@ -239,16 +244,9 @@ export function App() {
     attachEditor(ready);
     markAfterPaint('ui-ready');
     // A document named on the command line opens as soon as the editor exists.
-    takeInitialDocument().then(
-      async (opened) => {
-        if (opened && (await controller.openInitial(opened))) markAfterPaint('document-opened');
-      },
-      (error: unknown) =>
-        controller.notify({
-          kind: 'error',
-          text: `Couldn't open the file: ${error instanceof Error ? error.message : String(error)}`,
-        }),
-    );
+    void controller.openInitial(takeInitialDocument).then((opened) => {
+      if (opened) markAfterPaint('document-opened');
+    });
   };
 
   return (
