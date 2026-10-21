@@ -12,7 +12,7 @@
 | Static checks | oxlint, Prettier, TypeScript; clang-format, clang-tidy | see the README | Yes, except clang-tidy |
 | Manual checklist | Things only a person at the window can judge | [below](#manual-checklist) | No |
 
-At release 0.1.0: 30 C++ tests and 1,210 UI tests (86 unit, 1,124 compatibility) pass. The 31 LibreOffice tests also pass when run with `npm run test:compat`.
+At release 0.1.0: 30 C++ tests and 1,213 UI tests (89 unit, 1,124 compatibility) pass. The 31 LibreOffice tests also pass when run with `npm run test:compat`.
 
 ## DOCX compatibility suite
 

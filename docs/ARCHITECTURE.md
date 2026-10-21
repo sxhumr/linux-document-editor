@@ -165,7 +165,7 @@ These rules guard every action that would lose work:
 
 | Path | Contents |
 | --- | --- |
-| `CMakeLists.txt`, `CMakePresets.json` | Top-level build; `debug` and `release` presets (Ninja) |
+| `CMakeLists.txt`, `CMakePresets.json` | Top-level build; `debug`, `release` and `package` presets (Ninja) |
 | `native/src/` | Shell and bindings (`shell.cpp`), GTK dialogs (`file_dialogs.*`), file I/O (`file_io.*`), path grants (`path_grants.*`), JSON replies (`bridge_json.*`), embedded assets (`assets.*`), navigation policy (`navigation.*`), `main.cpp` |
 | `native/tests/` | Catch2 unit tests for the platform-free code (`pagelite_core`) |
 | `native/cmake/embed_assets.cmake` | Build-time asset embedding |

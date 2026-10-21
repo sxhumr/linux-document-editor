@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DocumentController, type SaveChoice } from './controller';
+import { UNTITLED } from './session';
 import type { FileRef, OpenedDocument } from '../native/bridge';
 import { NativeError } from '../native/bridge';
 
@@ -91,7 +92,7 @@ describe('Save', () => {
     expect(await controller.save()).toBe(false);
     expect(state()).toMatchObject({ info: { name: 'a.docx' }, modified: true });
     expect(state().notice?.kind).toBe('error');
-    expect(state().notice?.text).toContain('No space left on device.');
+    expect(state().notice?.text).toContain('The disk is full.');
     expect(editor.load).toHaveBeenCalledTimes(1); // the editor content was never replaced
   });
 
@@ -215,7 +216,30 @@ describe('Open', () => {
     const { controller, files, state } = setup();
     files.openDocument.mockRejectedValue(new NativeError('permission-denied', 'Cannot open /x: Permission denied'));
     expect(await controller.open()).toBe(false);
-    expect(state().notice?.text).toContain('Permission denied');
+    expect(state().notice?.text).toContain("doesn't have permission");
+  });
+
+  it('keeps the current document when the editor cannot load yet', async () => {
+    const { controller, files, editor, state } = setup();
+    editor.load.mockImplementation(() => {
+      throw new Error('The editor is not ready yet.');
+    });
+    files.openDocument.mockResolvedValue(doc('a.docx'));
+    expect(await controller.open()).toBe(false);
+    expect(state()).toMatchObject({ info: { name: UNTITLED.name, path: null }, notice: { kind: 'error' } });
+  });
+
+  it('keeps the message of a code it has no wording for', async () => {
+    const { controller, files, state } = setup();
+    files.openDocument.mockRejectedValue(new NativeError('io-error', 'Cannot read /x: Input/output error'));
+    expect(await controller.open()).toBe(false);
+    expect(state().notice?.text).toContain('Input/output error');
+  });
+
+  it('reports a startup document that fails to load', async () => {
+    const { controller, state } = setup();
+    expect(await controller.openInitial(() => Promise.reject(new NativeError('not-found', 'gone')))).toBe(false);
+    expect(state().notice?.text).toBe("Couldn't open the file: The file no longer exists.");
   });
 
   it('ignores a second request while one is in progress', async () => {
